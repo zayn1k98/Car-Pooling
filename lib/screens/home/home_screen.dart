@@ -1,5 +1,7 @@
 import 'package:car_pooling/screens/chat_screen/chat_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -11,59 +13,26 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   TextEditingController searchController = TextEditingController();
 
+  SharedPreferences? sharedPreferences;
+
+  String? userEmail;
+
+  @override
+  void initState() {
+    super.initState();
+
+    getUserData();
+  }
+
+  void getUserData() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+
+    userEmail = sharedPreferences!.getString('userEmail');
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   toolbarHeight: 70,
-      //   leading: Padding(
-      //     padding: const EdgeInsets.only(left: 10),
-      //     child: Image.asset(
-      //       'assets/icons/top.png',
-      //     ),
-      //   ),
-      //   actions: [
-      //     TextButton.icon(
-      //       onPressed: () {},
-      //       style: TextButton.styleFrom(
-      //         side: const BorderSide(
-      //           color: Colors.black,
-      //         ),
-      //       ),
-      //       icon: const Icon(
-      //         Icons.search,
-      //         color: Colors.black,
-      //       ),
-      //       label: const Text(
-      //         "Find",
-      //         style: TextStyle(
-      //           color: Colors.black,
-      //         ),
-      //       ),
-      //     ),
-      //     Padding(
-      //       padding: const EdgeInsets.symmetric(horizontal: 12),
-      //       child: TextButton.icon(
-      //         onPressed: () {},
-      //         style: TextButton.styleFrom(
-      //           side: const BorderSide(
-      //             color: Colors.black,
-      //           ),
-      //         ),
-      //         icon: const Icon(
-      //           Icons.add,
-      //           color: Colors.black,
-      //         ),
-      //         label: const Text(
-      //           "Post",
-      //           style: TextStyle(
-      //             color: Colors.black,
-      //           ),
-      //         ),
-      //       ),
-      //     ),
-      //   ],
-      // ),
       body: ListView(
         children: [
           const Padding(
@@ -90,65 +59,118 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           Padding(
             padding: const EdgeInsets.only(top: 16),
-            child: ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: 5,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  onTap: () {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) {
-                      return const ChatScreen();
-                    }));
-                  },
-                  leading: const CircleAvatar(
-                    radius: 24,
-                    backgroundImage: AssetImage('assets/images/user_image.jpg'),
-                  ),
-                  title: const Text(
-                    "Tim David",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  subtitle: const Text(
-                    "Thanks! That was a great ride.",
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
-                  ),
-                  trailing: const Column(
-                    children: [
-                      Text(
-                        "12:34",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
+            child: StreamBuilder<QuerySnapshot>(
+              stream:
+                  FirebaseFirestore.instance.collection('users').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: Text("Loading..."),
+                  );
+                }
+                return Column(
+                  children: snapshot.data!.docs
+                      .map<Widget>(
+                        (doc) => buildInboxList(
+                          snapshot: doc,
                         ),
-                      ),
-                      Spacer(),
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor: Colors.black,
-                        child: Text(
-                          "1",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ),
-                      Spacer(),
-                    ],
-                  ),
+                      )
+                      .toList(),
                 );
               },
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget buildInboxList({required DocumentSnapshot snapshot}) {
+    Map<String, dynamic> inboxData = snapshot.data() as Map<String, dynamic>;
+
+    if (userEmail == inboxData['email']) {
+      return const SizedBox();
+    } else {
+      return inboxItem(
+        id: inboxData['userId'],
+        name: inboxData['username'],
+        image: inboxData['profileImage'],
+        isOnline: true,
+        latestMessage: "Chat service testing",
+        timeStamp: "12:00",
+        isOpened: false,
+        noOfUnreadMessages: 2,
+      );
+    }
+  }
+
+  Widget inboxItem({
+    required String id,
+    required String name,
+    required String image,
+    required bool isOnline,
+    required String latestMessage,
+    required String timeStamp,
+    required bool isOpened,
+    required int noOfUnreadMessages,
+  }) {
+    return ListTile(
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return ChatScreen(
+            fromUserName: name,
+            fromUserImage: image,
+            fromUserId: id,
+            isUserOnline: isOnline,
+          );
+        }));
+      },
+      leading: ClipRRect(
+        borderRadius: BorderRadius.circular(30),
+        child: Image.network(
+          image,
+          height: 50,
+          width: 50,
+          fit: BoxFit.cover,
+        ),
+      ),
+      title: Text(
+        name,
+        style: const TextStyle(
+          color: Colors.black,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: Text(
+        latestMessage,
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 14,
+        ),
+      ),
+      trailing: Column(
+        children: [
+          Text(
+            timeStamp,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 12,
+            ),
+          ),
+          const Spacer(),
+          CircleAvatar(
+            radius: 10,
+            backgroundColor: Colors.black,
+            child: Text(
+              "$noOfUnreadMessages",
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+              ),
+            ),
+          ),
+          const Spacer(),
         ],
       ),
     );

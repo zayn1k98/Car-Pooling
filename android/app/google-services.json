@@ -37,6 +37,13 @@
             {
               "client_id": "869608176701-0hh5d6sufs3mkhlsud8i6ds15j19h1n3.apps.googleusercontent.com",
               "client_type": 3
+            },
+            {
+              "client_id": "869608176701-dkhvbblk1vhjkpc5r4n6f87cqoeip504.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.carPooling.RunnerTests"
+              }
             }
           ]
         }

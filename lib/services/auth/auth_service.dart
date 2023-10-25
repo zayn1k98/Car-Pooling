@@ -1,11 +1,22 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:developer';
+import 'package:car_pooling/screens/main_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:fluttertoast/fluttertoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+// import 'package:fluttertoast/fluttertoast.dart';
 
 class AuthService {
-  signInWithGoogle() async {
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+
+  SharedPreferences? sharedPreferences;
+
+  signInWithGoogle({required BuildContext context}) async {
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
     log("GOOGLE USER DETAILS : $googleUser");
@@ -21,29 +32,83 @@ class AuthService {
     log("CREDENTIAL : $credential");
 
     UserCredential firebaseCredentials =
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        await firebaseAuth.signInWithCredential(credential);
 
     log("FIREBASE CREDENTIALS : $firebaseCredentials");
+
+    fireStore.collection('users').doc().set(
+      {
+        'userId': firebaseCredentials.user!.uid,
+        'username': firebaseCredentials.user!.displayName,
+        'email': firebaseCredentials.user!.email,
+        'profileImage': firebaseCredentials.user!.photoURL,
+      },
+      SetOptions(
+        merge: true,
+      ),
+    );
+
+    sharedPreferences = await SharedPreferences.getInstance();
+
+    sharedPreferences!.setString('userId', firebaseCredentials.user!.uid);
+    sharedPreferences!
+        .setString('username', firebaseCredentials.user!.displayName ?? "");
+    sharedPreferences!
+        .setString('userEmail', firebaseCredentials.user!.email ?? "");
+    sharedPreferences!
+        .setString('userImage', firebaseCredentials.user!.photoURL ?? "");
+
+    Navigator.push(context, MaterialPageRoute(builder: (context) {
+      return const MainScreen();
+    }));
+
+    sharedPreferences!.setBool('isLoggedIn', true);
 
     return firebaseCredentials;
   }
 
-  signInWithFacebook() async {
-    try {
-      final LoginResult result = await FacebookAuth.instance.login();
+  signInWithFacebook({required BuildContext context}) async {
+    final LoginResult result = await FacebookAuth.instance.login();
 
-      if (result.status == LoginStatus.success) {
-        log("LOGIN SUCCESSFUL");
+    if (result.status == LoginStatus.success) {
+      log("LOGIN SUCCESSFUL");
 
-        final OAuthCredential facebookCredential =
-            FacebookAuthProvider.credential(result.accessToken!.token);
+      final OAuthCredential facebookCredential =
+          FacebookAuthProvider.credential(result.accessToken!.token);
 
-        return FirebaseAuth.instance.signInWithCredential(facebookCredential);
-      } else {
-        log("LOGIN FAILED");
-      }
-    } on Exception catch (e) {
-      return Fluttertoast.showToast(msg: "$e");
+      final userData = await FacebookAuth.instance.getUserData();
+
+      log("Facebook user data : $userData");
+
+      fireStore.collection('users').doc().set(
+        {
+          'userId': userData['id'],
+          'username': userData['name'],
+          'email': userData['email'],
+          'profileImage': userData['picture']['data']['url'],
+        },
+        SetOptions(
+          merge: true,
+        ),
+      );
+
+      sharedPreferences = await SharedPreferences.getInstance();
+
+      sharedPreferences!.setString('userId', userData['id']);
+      sharedPreferences!.setString('username', userData['name']);
+      sharedPreferences!.setString('userEmail', userData['email']);
+      sharedPreferences!
+          .setString('userImage', userData['picture']['data']['url']);
+
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return const MainScreen();
+      }));
+
+      sharedPreferences!.setBool('isLoggedIn', true);
+
+      return firebaseAuth.signInWithCredential(facebookCredential);
+    } else {
+      log("LOGIN FAILED");
     }
   }
 }

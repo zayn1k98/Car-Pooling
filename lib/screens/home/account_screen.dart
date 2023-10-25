@@ -1,7 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class AccountScreen extends StatelessWidget {
+class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
+
+  @override
+  State<AccountScreen> createState() => _AccountScreenState();
+}
+
+class _AccountScreenState extends State<AccountScreen> {
+  SharedPreferences? sharedPreferences;
+
+  String? username;
+  String? userImage;
+
+  @override
+  void initState() {
+    super.initState();
+
+    getUserData();
+  }
+
+  void getUserData() async {
+    sharedPreferences = await SharedPreferences.getInstance();
+
+    username = sharedPreferences!.getString('username');
+    userImage = sharedPreferences!.getString('userImage');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +47,18 @@ class AccountScreen extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 20),
             child: ListTile(
               onTap: () {},
-              leading: const CircleAvatar(
-                backgroundImage: AssetImage('assets/images/user_image.jpg'),
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(100),
+                child: Image.network(userImage ?? ""),
               ),
               title: const Text("View your profile"),
+              subtitle: Text(
+                username ?? "",
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.black,
+                ),
+              ),
               trailing: const Icon(Icons.chevron_right_rounded),
             ),
           ),

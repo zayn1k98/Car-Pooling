@@ -1,4 +1,4 @@
-import 'package:car_pooling/screens/main_screen.dart';
+// import 'package:car_pooling/screens/main_screen.dart';
 import 'package:car_pooling/services/auth/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -132,10 +132,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ),
           onTap: () async {
             //! temporarily commented code to build account screen
-            // AuthService().signInWithGoogle();
-            Navigator.push(context, MaterialPageRoute(builder: (context) {
-              return const MainScreen();
-            }));
+            AuthService().signInWithGoogle(context: context);
+            // Navigator.push(context, MaterialPageRoute(builder: (context) {
+            //   return const MainScreen();
+            // }));
           },
         ),
         const Divider(),
@@ -145,7 +145,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
             child: Text("Continue with Facebook"),
           ),
           onTap: () {
-            AuthService().signInWithFacebook();
+            AuthService().signInWithFacebook(context: context);
           },
         ),
       ],

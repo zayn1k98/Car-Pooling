@@ -7,6 +7,7 @@ class ChatMessage {
   final String? receiverEmail;
   final String? message;
   final Timestamp? timeStamp;
+  final MessageType? messageType;
 
   ChatMessage({
     this.senderID,
@@ -15,6 +16,7 @@ class ChatMessage {
     this.receiverEmail,
     this.message,
     this.timeStamp,
+    this.messageType,
   });
 
   Map<String, dynamic> toMap() {
@@ -25,6 +27,15 @@ class ChatMessage {
       'receiverEmail': receiverEmail,
       'message': message,
       'timestamp': timeStamp,
+      'messageType': messageType!.toJson(),
     };
   }
+}
+
+enum MessageType {
+  text,
+  image,
+  file;
+
+  String toJson() => name;
 }

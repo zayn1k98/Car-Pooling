@@ -19,8 +19,6 @@ class AuthService {
   signInWithGoogle({required BuildContext context}) async {
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
-    log("GOOGLE USER DETAILS : $googleUser");
-
     GoogleSignInAuthentication googleAuthentication =
         await googleUser!.authentication;
 
@@ -29,24 +27,33 @@ class AuthService {
       idToken: googleAuthentication.idToken,
     );
 
-    log("CREDENTIAL : $credential");
-
     UserCredential firebaseCredentials =
         await firebaseAuth.signInWithCredential(credential);
 
     log("FIREBASE CREDENTIALS : $firebaseCredentials");
 
-    fireStore.collection('users').doc().set(
-      {
-        'userId': firebaseCredentials.user!.uid,
-        'username': firebaseCredentials.user!.displayName,
-        'email': firebaseCredentials.user!.email,
-        'profileImage': firebaseCredentials.user!.photoURL,
-      },
-      SetOptions(
-        merge: true,
-      ),
-    );
+    QuerySnapshot querySnapshot = await fireStore
+        .collection('users')
+        .where('email', isEqualTo: googleUser.email)
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      log("USER ALREADY EXISTS!!!");
+    } else {
+      log("CREATING A NEW USER ... !!!");
+
+      fireStore.collection('users').doc().set(
+        {
+          'userId': firebaseCredentials.user!.uid,
+          'username': firebaseCredentials.user!.displayName,
+          'email': firebaseCredentials.user!.email,
+          'profileImage': firebaseCredentials.user!.photoURL,
+        },
+        SetOptions(
+          merge: true,
+        ),
+      );
+    }
 
     sharedPreferences = await SharedPreferences.getInstance();
 

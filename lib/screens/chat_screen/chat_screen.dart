@@ -1,9 +1,13 @@
 import 'dart:developer';
+import 'dart:io';
+import 'package:car_pooling/models/message_model.dart';
 import 'package:car_pooling/services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -43,6 +47,29 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void sendImage() async {
+    await chatService.uploadAndSendImageOrFile(
+      file: File(selectedImage!.path),
+      receiverID: widget.fromUserId,
+      isImage: true,
+    );
+
+    setState(() {
+      selectedImage = null;
+    });
+  }
+
+  void sendFile() async {
+    await chatService.uploadAndSendImageOrFile(
+      file: selectedFile!,
+      receiverID: widget.fromUserId,
+      isImage: false,
+    );
+    setState(() {
+      selectedFile = null;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -71,16 +98,29 @@ class _ChatScreenState extends State<ChatScreen> {
                   }
                   return ListView(
                     shrinkWrap: true,
-                    children: snapshot.data!.docs
-                        .map(
-                          (document) => messageBubble(document: document),
-                        )
-                        .toList(),
+                    children: snapshot.data!.docs.map(
+                      (document) {
+                        Map<String, dynamic> messageData =
+                            document.data() as Map<String, dynamic>;
+                        if (messageData['messageType'] == "image") {
+                          return imageBubble(document: document);
+                        }
+                        if (messageData['messageType'] == "file") {
+                          return fileBubble(document: document);
+                        }
+                        return messageBubble(document: document);
+                      },
+                    ).toList(),
                   );
                 },
               ),
             ),
           ),
+          selectedImage != null
+              ? imageOrFilePreview(messageType: MessageType.image)
+              : selectedFile != null
+                  ? imageOrFilePreview(messageType: MessageType.file)
+                  : const SizedBox(),
           messageTextField(),
         ],
       ),
@@ -268,6 +308,244 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Widget imageBubble({required DocumentSnapshot document}) {
+    Map<String, dynamic> messageData = document.data() as Map<String, dynamic>;
+
+    bool isMessageIncoming =
+        messageData['senderID'] != firebaseAuth.currentUser!.uid;
+
+    DateTime dateTime = (messageData['timestamp'] as Timestamp).toDate();
+
+    String messageTime = DateFormat('h:mm a').format(dateTime);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        if (!isMessageIncoming)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Image.asset(
+                    'assets/icons/read.png',
+                    height: 20,
+                    width: 20,
+                  ),
+                  Text(
+                    messageTime,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF7D7F88),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Container(
+            height: 220,
+            width: 200,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.grey[200],
+              image: DecorationImage(
+                image: NetworkImage(
+                  messageData['message'],
+                ),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+        if (isMessageIncoming)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    messageTime,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget fileBubble({required DocumentSnapshot document}) {
+    Map<String, dynamic> messageData = document.data() as Map<String, dynamic>;
+
+    bool isMessageIncoming =
+        messageData['senderID'] != firebaseAuth.currentUser!.uid;
+
+    DateTime dateTime = (messageData['timestamp'] as Timestamp).toDate();
+
+    String messageTime = DateFormat('h:mm a').format(dateTime);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        if (!isMessageIncoming)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Image.asset(
+                    'assets/icons/read.png',
+                    height: 20,
+                    width: 20,
+                  ),
+                  Text(
+                    messageTime,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF7D7F88),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: Container(
+            height: 70,
+            width: 250,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: Colors.grey[200],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.attach_file_rounded,
+                    color: Colors.grey[700],
+                  ),
+                  const Spacer(),
+                  const Text(
+                    "attachment.pdf",
+                    style: TextStyle(
+                      fontSize: 16,
+                    ),
+                  ),
+                  const Spacer(),
+                  if (isMessageIncoming)
+                    IconButton(
+                      onPressed: () {},
+                      style: IconButton.styleFrom(
+                        backgroundColor: Colors.white,
+                      ),
+                      icon: Icon(
+                        Icons.arrow_downward_rounded,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        if (isMessageIncoming)
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 8),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    messageTime,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey[500],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget imageOrFilePreview({required MessageType messageType}) {
+    return Container(
+      height: 80,
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          children: [
+            Container(
+              height: 50,
+              width: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: messageType == MessageType.file
+                  ? Icon(
+                      Icons.attach_file_rounded,
+                      color: Colors.grey[700],
+                    )
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: Image.file(
+                        File(selectedImage!.path),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+            ),
+            Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: Text(
+                messageType == MessageType.file
+                    ? fileName ?? "error"
+                    : "Captured from camera",
+                style: const TextStyle(
+                  fontSize: 16,
+                ),
+              ),
+            ),
+            const Spacer(),
+            IconButton(
+              onPressed: () {
+                setState(() {
+                  selectedImage = null;
+                  selectedFile = null;
+                });
+              },
+              icon: Icon(
+                Icons.close_rounded,
+                color: Colors.grey[500],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget messageTextField() {
     return Padding(
       padding: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 8),
@@ -311,25 +589,46 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
           ),
           suffixIcon: SizedBox(
-            width: 80,
+            width: 112,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 GestureDetector(
                   onTap: () {
-                    log("file tapped");
+                    chooseImage();
                   },
                   child: const Icon(
-                    Icons.attach_file,
+                    Icons.photo_camera_back_outlined,
                     color: Color(0xFF7D7F88),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      log("file tapped");
+                      chooseFile();
+                    },
+                    child: const Icon(
+                      Icons.attach_file,
+                      color: Color(0xFF7D7F88),
+                    ),
                   ),
                 ),
                 IconButton(
                   onPressed: () {
-                    sendMessage();
+                    if (selectedFile != null) {
+                      // send file
+                      sendFile();
+                    } else if (selectedImage != null) {
+                      // send image
+                      sendImage();
+                    } else {
+                      sendMessage();
+                    }
                   },
                   style: IconButton.styleFrom(
-                    backgroundColor: Colors.blue,
+                    backgroundColor: const Color(0xFFFF4E00),
                   ),
                   icon: const Icon(
                     Icons.arrow_upward_rounded,
@@ -342,5 +641,86 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
     );
+  }
+
+  void chooseImage() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Text(
+                  "Choose image from",
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Padding(
+                padding: EdgeInsets.only(top: 20),
+                child: Divider(
+                  height: 1,
+                ),
+              ),
+              ListTile(
+                onTap: () {
+                  Navigator.pop(context);
+                  openImagePicker(imageSource: ImageSource.camera);
+                },
+                title: const Center(
+                  child: Text("Camera"),
+                ),
+              ),
+              const Divider(
+                height: 1,
+              ),
+              ListTile(
+                onTap: () {
+                  Navigator.pop(context);
+                  openImagePicker(imageSource: ImageSource.gallery);
+                },
+                title: const Center(
+                  child: Text("Gallery"),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  XFile? selectedImage;
+  String? imageName;
+  void openImagePicker({required ImageSource imageSource}) async {
+    selectedImage = await ImagePicker().pickImage(source: imageSource);
+    setState(() {
+      imageName = selectedImage!.path.split('/').last.split('-').last;
+      log("Image path : $imageName");
+    });
+  }
+
+  File? selectedFile;
+  String? fileName;
+  void chooseFile() async {
+    FilePickerResult? pickerResult = await FilePicker.platform.pickFiles();
+
+    if (pickerResult != null) {
+      setState(() {
+        selectedFile = File(pickerResult.files.single.path!);
+        log("File path : ${selectedFile!.path}");
+        fileName = selectedFile!.path.split('/').last;
+      });
+    } else {
+      log("File picker cancelled!");
+    }
   }
 }

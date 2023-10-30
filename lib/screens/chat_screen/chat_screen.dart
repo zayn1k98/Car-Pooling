@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'dart:io';
 import 'package:car_pooling/models/message_model.dart';
+import 'package:car_pooling/screens/chat_screen/image_view.dart';
 import 'package:car_pooling/services/chat/chat_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
@@ -8,17 +9,20 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
   final String fromUserName;
   final String fromUserImage;
   final String fromUserId;
+  final String userPushToken;
   final bool isUserOnline;
   const ChatScreen({
     required this.fromUserName,
     required this.fromUserImage,
     required this.fromUserId,
+    required this.userPushToken,
     required this.isUserOnline,
     super.key,
   });
@@ -38,6 +42,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (messageController.text.isNotEmpty) {
       await chatService.sendMessage(
         receiverID: widget.fromUserId,
+        receiverPushToken: widget.userPushToken,
         message: messageController.text,
       );
 
@@ -51,6 +56,7 @@ class _ChatScreenState extends State<ChatScreen> {
     await chatService.uploadAndSendImageOrFile(
       file: File(selectedImage!.path),
       receiverID: widget.fromUserId,
+      receiverPushToken: widget.userPushToken,
       isImage: true,
     );
 
@@ -63,6 +69,7 @@ class _ChatScreenState extends State<ChatScreen> {
     await chatService.uploadAndSendImageOrFile(
       file: selectedFile!,
       receiverID: widget.fromUserId,
+      receiverPushToken: widget.userPushToken,
       isImage: false,
     );
     setState(() {
@@ -347,17 +354,29 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
         Padding(
           padding: const EdgeInsets.all(8),
-          child: Container(
-            height: 220,
-            width: 200,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.grey[200],
-              image: DecorationImage(
-                image: NetworkImage(
-                  messageData['message'],
+          child: GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return ImageView(
+                  imageUrl: messageData['message'],
+                );
+              }));
+            },
+            child: Hero(
+              tag: 'heroTag',
+              child: Container(
+                height: 220,
+                width: 200,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.grey[200],
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      messageData['message'],
+                    ),
+                    fit: BoxFit.cover,
+                  ),
                 ),
-                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -449,7 +468,14 @@ class _ChatScreenState extends State<ChatScreen> {
                   const Spacer(),
                   if (isMessageIncoming)
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        log("download file");
+                        await launchUrl(
+                          Uri.parse(
+                            messageData['message'],
+                          ),
+                        );
+                      },
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.white,
                       ),

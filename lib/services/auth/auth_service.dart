@@ -42,7 +42,7 @@ class AuthService {
     } else {
       log("CREATING A NEW USER ... !!!");
 
-      fireStore.collection('users').doc().set(
+      fireStore.collection('users').doc(firebaseCredentials.user!.uid).set(
         {
           'userId': firebaseCredentials.user!.uid,
           'username': firebaseCredentials.user!.displayName,
@@ -87,7 +87,7 @@ class AuthService {
 
       log("Facebook user data : $userData");
 
-      fireStore.collection('users').doc().set(
+      fireStore.collection('users').doc(userData['id']).set(
         {
           'userId': userData['id'],
           'username': userData['name'],

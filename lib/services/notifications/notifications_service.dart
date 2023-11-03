@@ -20,9 +20,9 @@ class NotificationService {
 
     sharedPreferences.setString('pushToken', fcmToken ?? "");
 
-    FirebaseMessaging.onBackgroundMessage(
-      (message) => handleBackgroundMessage(message),
-    );
+    // FirebaseMessaging.onBackgroundMessage(
+    //   (message) => handleBackgroundMessage(message),
+    // );
   }
 
   Future<void> sendNotification({

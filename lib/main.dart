@@ -1,8 +1,10 @@
 import 'dart:developer';
 import 'package:car_pooling/screens/landing_screen/landing_screen.dart';
+import 'package:car_pooling/screens/main_screen.dart';
 import 'package:car_pooling/services/notifications/notifications_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 
 void main() async {
@@ -18,8 +20,35 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool isLoggedIn = false;
+  Widget? firstPage;
+
+  void isUserLoggedIn() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+
+    isLoggedIn = sharedPreferences.getBool('isLoggedIn') ?? false;
+
+    log(isLoggedIn ? "USER IS LOGGED IN !!!" : "USER IS NOT LOGGED IN !!!");
+
+    setState(() {
+      firstPage = isLoggedIn ? const MainScreen() : const LandingScreen();
+    });
+  }
+
+  @override
+  void initState() {
+    isUserLoggedIn();
+
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +58,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         useMaterial3: true,
       ),
-      home: const LandingScreen(),
+      home: firstPage,
     );
   }
 }

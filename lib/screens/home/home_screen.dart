@@ -27,8 +27,12 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     getUserData();
-
     UserServices().updateActiveStatus(isOnline: true);
+
+    getUserMessageData(
+      messages: [],
+      receiverUserID: FirebaseAuth.instance.currentUser!.uid,
+    );
   }
 
   void getUserData() async {
@@ -48,17 +52,31 @@ class _HomeScreenState extends State<HomeScreen> {
   List unreadMessages = [];
 
   void getUserMessageData({
-    required List messages,
+    required List<QueryDocumentSnapshot> messages,
     required String receiverUserID,
   }) async {
-    if (receiverUserID != FirebaseAuth.instance.currentUser!.uid) {
-      userMessages = await ChatService().getUnreadMessages(
-        receiverUserID: receiverUserID,
-      );
+    for (var ele in messages) {
+      Map<String, dynamic> data = ele.data() as Map<String, dynamic>;
 
-      log("All unread messages => $userMessages");
+      if (data['userId'] != FirebaseAuth.instance.currentUser!.uid) {
+        userMessages = await ChatService().getUnreadMessages(
+          receiverUserID: data['userId'],
+        );
+
+        if (unreadMessages.contains(userMessages) || unreadMessages.isEmpty) {
+          unreadMessages.add(userMessages);
+        } else if (userMessages.isEmpty) {
+          unreadMessages.add({
+            'senderID': receiverUserID,
+            'unreadMessages': [],
+          });
+        }
+      }
     }
+    log("All messages => $unreadMessages");
   }
+
+  bool isLoading = true;
 
   @override
   Widget build(BuildContext context) {
@@ -99,13 +117,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
                 return Column(
-                  children: snapshot.data!.docs
-                      .map<Widget>(
-                        (doc) => buildInboxList(
-                          snapshot: doc,
-                        ),
-                      )
-                      .toList(),
+                  children: snapshot.data!.docs.map<Widget>((doc) {
+                    // getUserMessageData(
+                    //   messages: snapshot.data!.docs,
+                    //   receiverUserID: doc['userId'],
+                    // );
+                    return buildInboxList(
+                      snapshot: doc,
+                    );
+                  }).toList(),
                 );
               },
             ),
@@ -118,15 +138,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget buildInboxList({required DocumentSnapshot snapshot}) {
     Map<String, dynamic> inboxData = snapshot.data() as Map<String, dynamic>;
 
-    List unreadMessages = [];
+    Map<String, dynamic> chatData = {};
 
-    getUserMessageData(
-      messages: unreadMessages,
-      receiverUserID: inboxData['userId'],
-    );
-
-    if (inboxData['userId'] == userMessages['senderID']) {
-      log("Match1");
+    for (var ele in unreadMessages) {
+      if (inboxData['userId'] == ele['senderID']) {
+        chatData = ele;
+      }
     }
 
     if (userEmail == inboxData['email']) {
@@ -138,14 +155,16 @@ class _HomeScreenState extends State<HomeScreen> {
         image: inboxData['profileImage'],
         pushToken: inboxData['pushToken'],
         isOnline: true,
-        latestMessage: userMessages['unreadMessages'].isEmpty
+        latestMessage: chatData['unreadMessages'].isEmpty
             ? "Tap to chat"
-            : userMessages['unreadMessages'].last['message'],
-        timeStamp: userMessages['unreadMessages'].last['timestamp'],
+            : chatData['unreadMessages'].last['message'],
+        timeStamp: chatData['unreadMessages'].isEmpty
+            ? ""
+            : chatData['unreadMessages'].last['timestamp'],
         isOpened: false,
-        noOfUnreadMessages: userMessages['unreadMessages'].isEmpty
+        noOfUnreadMessages: chatData['unreadMessages'].isEmpty
             ? 0
-            : userMessages['unreadMessages'].length,
+            : chatData['unreadMessages'].length,
       );
     }
   }

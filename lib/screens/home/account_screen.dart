@@ -1,3 +1,4 @@
+import 'package:car_pooling/screens/profile_options/vehicles/vehicles_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -65,6 +66,18 @@ class _AccountScreenState extends State<AccountScreen> {
           ListTile(
             onTap: () {},
             title: const Text("Profile settings"),
+            trailing: const Icon(Icons.chevron_right_rounded),
+          ),
+          const Divider(
+            height: 1,
+          ),
+          ListTile(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return const VehiclesScreen();
+              }));
+            },
+            title: const Text("Vehicles"),
             trailing: const Icon(Icons.chevron_right_rounded),
           ),
           const Divider(

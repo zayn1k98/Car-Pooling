@@ -1,5 +1,6 @@
 class Vehicle {
   String? vehicleImage;
+  String? userId;
   String? model;
   String? type;
   String? color;
@@ -14,6 +15,7 @@ class Vehicle {
 
   Vehicle({
     this.vehicleImage,
+    this.userId,
     this.model,
     this.type,
     this.color,
@@ -29,7 +31,8 @@ class Vehicle {
 
   toJson() {
     return {
-      "description": vehicleImage,
+      "vehicleImage": vehicleImage,
+      "userId": userId,
       "model": model,
       "type": type,
       "color": color,

@@ -1,9 +1,10 @@
 import 'dart:developer';
 import 'dart:io';
-
 import 'package:car_pooling/models/vehicle_model.dart';
 import 'package:car_pooling/services/vehicles/vehicle_services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
 
 class AddVehicleScreen extends StatefulWidget {
@@ -114,7 +115,7 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
 
     if (formKey.currentState!.validate()) {
       Vehicle newVehicle = Vehicle(
-        // vehicleImage: descriptionController.text,
+        userId: FirebaseAuth.instance.currentUser!.uid,
         model: modelController.text,
         type: typeController.text,
         color: colorController.text,
@@ -128,7 +129,10 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
         isPets: isPets,
       );
 
-      await VehicleServices().addVehicle(vehicle: newVehicle).then((value) {
+      await VehicleServices()
+          .addVehicle(
+              vehicle: newVehicle, vehicleImage: File(selectedImage!.path))
+          .then((value) {
         Navigator.pop(context);
       });
     }
@@ -185,11 +189,15 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
                             color: const Color(0xFFCECECE),
                             width: 1,
                           ),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                         child: selectedImage != null
-                            ? Image.file(
-                                File(selectedImage!.path),
-                                fit: BoxFit.cover,
+                            ? ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image.file(
+                                  File(selectedImage!.path),
+                                  fit: BoxFit.cover,
+                                ),
                               )
                             : const SizedBox(),
                       ),
@@ -479,7 +487,12 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
       persistentFooterButtons: [
         GestureDetector(
           onTap: () {
-            addNewVehicle();
+            if (selectedImage != null) {
+              addNewVehicle();
+            } else {
+              Fluttertoast.showToast(
+                  msg: "Please upload an image of your vehicle");
+            }
           },
           child: const Padding(
             padding: EdgeInsets.symmetric(vertical: 10),

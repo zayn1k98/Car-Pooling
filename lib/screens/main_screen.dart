@@ -1,5 +1,6 @@
 import 'package:car_pooling/screens/home/account_screen.dart';
 import 'package:car_pooling/screens/home/home_screen.dart';
+import 'package:car_pooling/screens/home/post_ride/post_ride_screen.dart';
 import 'package:car_pooling/screens/home/trips_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -58,7 +59,11 @@ class _MainScreenState extends State<MainScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: TextButton.icon(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return const PostRideScreen();
+                }));
+              },
               style: TextButton.styleFrom(
                 side: const BorderSide(
                   color: Colors.black,

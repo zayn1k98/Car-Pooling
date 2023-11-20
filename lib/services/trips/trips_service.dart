@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:car_pooling/models/trip_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -29,13 +28,18 @@ class TripsService {
   }
 
   Future<void> postTrip({required TripModel trip}) async {
-    await firestore
-        .collection('trips')
-        .doc(trip.userId)
-        .collection('posted_trips')
-        .add(trip.toJson())
-        .then((value) {
+    await firestore.collection('trips').add(trip.toJson()).then((value) {
       log("TRIP POSTED SUCCESSFULLY!!!");
     });
+  }
+
+  Future<List> getTrips() async {
+    QuerySnapshot tripQuery = await firestore.collection('trips').get();
+
+    List trips = tripQuery.docs;
+
+    log("ALL TRIPS : $trips");
+
+    return trips;
   }
 }

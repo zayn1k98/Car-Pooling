@@ -118,10 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
                 return Column(
                   children: snapshot.data!.docs.map<Widget>((doc) {
-                    // getUserMessageData(
-                    //   messages: snapshot.data!.docs,
-                    //   receiverUserID: doc['userId'],
-                    // );
                     return buildInboxList(
                       snapshot: doc,
                     );
@@ -155,17 +151,28 @@ class _HomeScreenState extends State<HomeScreen> {
         image: inboxData['profileImage'],
         pushToken: inboxData['pushToken'],
         isOnline: true,
-        latestMessage: chatData['unreadMessages'].isEmpty
-            ? "Tap to chat"
-            : chatData['unreadMessages'].last['message'],
-        timeStamp: chatData['unreadMessages'].isEmpty
-            ? ""
-            : chatData['unreadMessages'].last['timestamp'],
+        latestMessage: "Tap to chat",
+        timeStamp: "testing",
         isOpened: false,
-        noOfUnreadMessages: chatData['unreadMessages'].isEmpty
-            ? 0
-            : chatData['unreadMessages'].length,
+        noOfUnreadMessages: 0,
       );
+      // return inboxItem(
+      //   id: inboxData['userId'],
+      //   name: inboxData['username'],
+      //   image: inboxData['profileImage'],
+      //   pushToken: inboxData['pushToken'],
+      //   isOnline: true,
+      //   latestMessage: chatData['unreadMessages'].isEmpty
+      //       ? "Tap to chat"
+      //       : chatData['unreadMessages'].last['message'],
+      //   timeStamp: chatData['unreadMessages'].isEmpty
+      //       ? ""
+      //       : chatData['unreadMessages'].last['timestamp'],
+      //   isOpened: false,
+      //   noOfUnreadMessages: chatData['unreadMessages'].isEmpty
+      //       ? 0
+      //       : chatData['unreadMessages'].length,
+      // );
     }
   }
 

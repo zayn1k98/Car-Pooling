@@ -61,6 +61,7 @@ class _PostRideScreenState extends State<PostRideScreen> {
             price: priceController.text,
             tripType: "Request to book",
             tripDescription: tripDescriptionController.text,
+            status: "active",
           );
 
           log("TRIP MODEL : ${trip.toJson()}");

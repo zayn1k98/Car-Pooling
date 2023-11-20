@@ -12,6 +12,7 @@ class TripModel {
   String? price;
   String? tripType;
   String? tripDescription;
+  String? status;
 
   TripModel({
     this.userId,
@@ -25,6 +26,7 @@ class TripModel {
     this.price,
     this.tripType,
     this.tripDescription,
+    this.status,
   });
 
   toJson() {
@@ -40,6 +42,7 @@ class TripModel {
       "price": price,
       "tripType": tripType,
       "tripDescription": tripDescription,
+      "status": status,
     };
   }
 }

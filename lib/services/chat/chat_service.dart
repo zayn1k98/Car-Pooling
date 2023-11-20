@@ -16,15 +16,15 @@ class ChatService {
     required String otherUserId,
   }) {
     List<String> ids = [userId, otherUserId];
-
     ids.sort();
-
     String chatRoomId = ids.join("_");
+
+    log("CHAT ROOM ID : $chatRoomId");
 
     return fireStore
         .collection('chat_rooms')
         .doc(chatRoomId)
-        .collection('messages')
+        .collection('chats')
         .orderBy('timestamp', descending: false)
         .snapshots();
   }
@@ -34,37 +34,34 @@ class ChatService {
     required String receiverPushToken,
     required String message,
   }) async {
-    //* GET CURRENT USER INFORMATION
-
     final String userID = firebaseAuth.currentUser!.uid;
     final Timestamp timestamp = Timestamp.now();
 
-    //* CREATE A NEW MESSAGE
-
     ChatMessage newMessage = ChatMessage(
-      senderID: userID,
-      receiverID: receiverID,
       message: message,
       timeStamp: timestamp,
       isMessageRead: false,
       messageType: MessageType.text,
     );
 
-    //* CREATE A CHAT ROOM ID FOR USERID AND RECEIVERID - PAIRING AND AMBIGUITY
+    QuerySnapshot singleChat = await fireStore
+        .collection('chats')
+        .where('receiver_id', isEqualTo: receiverID)
+        .get();
 
-    List<String> ids = [userID, receiverID];
+    List singleChatList = singleChat.docs;
 
-    ids.sort();
+    Map<String, dynamic> chat = {
+      'sender_id': userID,
+      'receiver_id': receiverID,
+      'chats': singleChatList,
+    };
 
-    String chatRoomID = ids.join("_");
+    // List<String> ids = [userID, receiverID];
+    // ids.sort();
+    // String chatRoomID = ids.join("_");
 
-    //* POST MESSAGE TO DATABASE
-
-    await fireStore
-        .collection('chat_rooms')
-        .doc(chatRoomID)
-        .collection('messages')
-        .add(newMessage.toMap());
+    await fireStore.collection('chats').add(newMessage.toMap());
 
     await NotificationService().sendNotification(
       pushToken: receiverPushToken,

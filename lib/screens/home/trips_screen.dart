@@ -1,4 +1,9 @@
+import 'dart:developer';
+
+import 'package:car_pooling/screens/home/trips/trip_preview.dart';
+import 'package:car_pooling/services/trips/trips_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class TripsScreen extends StatefulWidget {
   const TripsScreen({super.key});
@@ -11,6 +16,29 @@ class _TripsScreenState extends State<TripsScreen> {
   bool isActive = true;
   bool isRecent = false;
   bool isCancelled = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    getAllTrips();
+  }
+
+  List allTrips = [];
+  List activeTrips = [];
+
+  void getAllTrips() async {
+    allTrips = await TripsService().getTrips();
+
+    for (var ele in allTrips) {
+      if (ele['status'] == 'active') {
+        setState(() {
+          activeTrips.add(ele);
+        });
+      }
+      log("status : ${ele['status']} on ${ele['departureDate']}");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -123,197 +151,274 @@ class _TripsScreenState extends State<TripsScreen> {
             ),
           ),
           const SizedBox(height: 30),
-          ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 5,
-            itemBuilder: (context, index) {
-              return tripsCard();
-            },
-          ),
+          isActive
+              ? ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: activeTrips.length,
+                  itemBuilder: (context, index) {
+                    return tripsCard(
+                      tripDetails: activeTrips[index],
+                    );
+                  },
+                )
+              : isRecent
+                  ? const Column()
+                  : const Column(),
         ],
       ),
     );
   }
 
-  Widget tripsCard() {
+  Widget tripsCard({required tripDetails}) {
+    DateTime tripDateTime =
+        DateFormat('d MMMM yyyy').parse(tripDetails['departureDate']);
+    String tripDate = DateFormat('EEE, MMM d').format(tripDateTime);
+
     return Padding(
       padding: const EdgeInsets.all(10),
-      child: Container(
-        height: 200,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: const Color(0xFFE9E9E9),
+      child: GestureDetector(
+        onTap: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return const TripsPreviewScreen();
+          }));
+        },
+        child: Container(
+          height:
+              tripDetails['stops'].isNotEmpty || tripDetails['stops'] != null
+                  ? 240
+                  : 200,
+          decoration: BoxDecoration(
+            border: Border.all(
+              color: const Color(0xFFE9E9E9),
+            ),
+            borderRadius: BorderRadius.circular(14),
           ),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Padding(
-              padding: EdgeInsets.all(10),
-              child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Row(
+                  children: [
+                    Text(
+                      "$tripDate at ${tripDetails['departureTime']}",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Text(
+                      "6 seats left",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      "₹ ${tripDetails['price']}",
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Row(
                 children: [
-                  Text(
-                    "Thu, Sep 7 at 7:30 PM",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
+                  Container(
+                    height: tripDetails['stops'].isNotEmpty ||
+                            tripDetails['stops'] != null
+                        ? 75
+                        : 50,
+                    width: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      borderRadius: BorderRadius.circular(30),
                     ),
                   ),
-                  Spacer(),
-                  Text(
-                    "6 seats left",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(width: 10),
-                  Text(
-                    "Rs.50",
-                    style: TextStyle(
-                      color: Colors.green,
-                      fontWeight: FontWeight.bold,
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 10),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                "${tripDetails['origin']}",
+                                style: const TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: 16),
+                                child: Text(
+                                  "98, George St, Ottowa, Canada",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          tripDetails['stops'].isNotEmpty ||
+                                  tripDetails['stops'] != null
+                              ? Row(
+                                  children: [
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(left: 10),
+                                            child: Container(
+                                              height: 8,
+                                              width: 2,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 4),
+                                            child: Text(
+                                              "${tripDetails['stops']}",
+                                              style: const TextStyle(
+                                                color: Colors.blue,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          Padding(
+                                            padding:
+                                                const EdgeInsets.only(left: 10),
+                                            child: Container(
+                                              height: 8,
+                                              width: 2,
+                                              decoration: BoxDecoration(
+                                                color: Colors.grey,
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : const SizedBox(),
+                          Row(
+                            children: [
+                              Text(
+                                "${tripDetails['destination']}",
+                                style: const TextStyle(
+                                  color: Colors.blue,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.only(left: 16),
+                                child: Text(
+                                  "Pearson Airport Terminal 1",
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ),
-            ),
-            Row(
-              children: [
-                Container(
-                  height: 50,
-                  width: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
-                    borderRadius: BorderRadius.circular(30),
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  "${tripDetails['vehicle']}",
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const Expanded(
-                  child: Padding(
-                    padding: EdgeInsets.only(left: 10),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Text(
-                              "Ottawa",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 16),
-                              child: Text(
-                                "98, George St, Ottowa, Canada",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            Text(
-                              "Mississuagga",
-                              style: TextStyle(
-                                color: Colors.blue,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.only(left: 16),
-                              child: Text(
-                                "Pearson Airport Terminal 1",
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(10),
-              child: Text(
-                "Chevrolet Suburban 2022",
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+              ),
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: Divider(
+                  indent: 10,
+                  endIndent: 10,
+                  height: 1,
+                  color: Color(0xFFE4E4E4),
                 ),
               ),
-            ),
-            const Padding(
-              padding: EdgeInsets.only(bottom: 12),
-              child: Divider(
-                indent: 10,
-                endIndent: 10,
-                height: 1,
-                color: Color(0xFFE4E4E4),
+              SizedBox(
+                height: 40,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    const CircleAvatar(
+                      backgroundImage:
+                          AssetImage('assets/images/user_image.jpg'),
+                    ),
+                    const Text(
+                      "Johnson",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Image.asset(
+                      'assets/icons/verified.png',
+                      height: 26,
+                      width: 26,
+                    ),
+                    const VerticalDivider(
+                      width: 1,
+                    ),
+                    const Icon(
+                      Icons.star,
+                      color: Colors.amber,
+                      size: 22,
+                    ),
+                    const Text(
+                      "4.6",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const VerticalDivider(
+                      width: 1,
+                    ),
+                    const Text(
+                      "45 Rides",
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            SizedBox(
-              height: 40,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  const CircleAvatar(
-                    backgroundImage: AssetImage('assets/images/user_image.jpg'),
-                  ),
-                  const Text(
-                    "Johnson",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Image.asset(
-                    'assets/icons/verified.png',
-                    height: 26,
-                    width: 26,
-                  ),
-                  const VerticalDivider(
-                    width: 1,
-                  ),
-                  const Icon(
-                    Icons.star,
-                    color: Colors.amber,
-                    size: 22,
-                  ),
-                  const Text(
-                    "4.6",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const VerticalDivider(
-                    width: 1,
-                  ),
-                  const Text(
-                    "45 Rides",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

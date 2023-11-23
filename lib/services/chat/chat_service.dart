@@ -97,6 +97,13 @@ class ChatService with ChangeNotifier {
     ids.sort();
     String chatRoomID = ids.join("_");
 
+    await fireStore.collection('chat_rooms').doc(chatRoomID).set(
+      {
+        'sender_id': userID,
+        'receiver_id': receiverID,
+      },
+    );
+
     await fireStore
         .collection('chat_rooms')
         .doc(chatRoomID)

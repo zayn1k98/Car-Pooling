@@ -92,7 +92,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   otherUserId: firebaseAuth.currentUser!.uid,
                 ),
                 builder: (context, snapshot) {
-                  log("Stream response : ${snapshot.data!.docs}");
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
                       child: Text("Loading"),

@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
+import 'package:provider/provider.dart';
+import 'services/chat/chat_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,13 +54,18 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Car Pooling',
-      //! Change theme to light theme from the app's theme data file where the theme is defined for the app.
-      theme: ThemeData(
-        useMaterial3: true,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ChatService()),
+      ],
+      child: MaterialApp(
+        title: 'Car Pooling',
+        //! Change theme to light theme from the app's theme data file where the theme is defined for the app.
+        theme: ThemeData(
+          useMaterial3: true,
+        ),
+        home: firstPage,
       ),
-      home: firstPage,
     );
   }
 }

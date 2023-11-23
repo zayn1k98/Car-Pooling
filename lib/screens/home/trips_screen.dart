@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:car_pooling/screens/home/trips/trip_preview.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
 import 'package:flutter/material.dart';
@@ -179,8 +178,11 @@ class _TripsScreenState extends State<TripsScreen> {
       padding: const EdgeInsets.all(10),
       child: GestureDetector(
         onTap: () {
+          print("TRIP DETAILS : ${tripDetails.data()}");
           Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return const TripsPreviewScreen();
+            return TripsPreviewScreen(
+              tripDetails: tripDetails,
+            );
           }));
         },
         child: Container(

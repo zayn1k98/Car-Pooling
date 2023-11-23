@@ -1,11 +1,11 @@
 import 'dart:developer';
-
 import 'package:car_pooling/screens/chat_screen/chat_screen.dart';
 import 'package:car_pooling/services/chat/chat_service.dart';
 import 'package:car_pooling/services/user/user_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -108,8 +108,9 @@ class _HomeScreenState extends State<HomeScreen> {
           Padding(
             padding: const EdgeInsets.only(top: 16),
             child: StreamBuilder<QuerySnapshot>(
-              stream:
-                  FirebaseFirestore.instance.collection('users').snapshots(),
+              stream: FirebaseFirestore.instance
+                  .collection('chat_rooms')
+                  .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -131,48 +132,59 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> getUnreadMessages({required String documentId}) async {
+    unreadMessages = await ChatService().getChatMessages(
+      docID: documentId,
+    );
+  }
+
   Widget buildInboxList({required DocumentSnapshot snapshot}) {
     Map<String, dynamic> inboxData = snapshot.data() as Map<String, dynamic>;
 
-    Map<String, dynamic> chatData = {};
-
-    for (var ele in unreadMessages) {
-      if (inboxData['userId'] == ele['senderID']) {
-        chatData = ele;
-      }
-    }
-
-    if (userEmail == inboxData['email']) {
+    if (FirebaseAuth.instance.currentUser!.uid != inboxData['receiver_id'] &&
+        FirebaseAuth.instance.currentUser!.uid != inboxData['sender_id']) {
       return const SizedBox();
     } else {
-      return inboxItem(
-        id: inboxData['userId'],
-        name: inboxData['username'],
-        image: inboxData['profileImage'],
-        pushToken: inboxData['pushToken'],
-        isOnline: true,
-        latestMessage: "Tap to chat",
-        timeStamp: "testing",
-        isOpened: false,
-        noOfUnreadMessages: 0,
+      getUnreadMessages(documentId: inboxData['doc_id']);
+
+      Map<String, dynamic> userChatData = {};
+
+      return FutureBuilder(
+        future: Future(
+          () async {
+            getUnreadMessages(
+              documentId: inboxData['doc_id'],
+            );
+
+            userChatData = await UserServices().getUserData(
+              userId: inboxData['receiver_id'],
+            );
+
+            print("USER DATA !!! = $userChatData");
+          },
+        ),
+        builder: (context, snapshot) {
+          Timestamp timestamp = unreadMessages.last['timestamp'];
+
+          DateTime dateTime = timestamp.toDate();
+          String messageTime = DateFormat('h:mm a').format(dateTime);
+          return userChatData.isEmpty
+              ? const LinearProgressIndicator()
+              : unreadMessages.isEmpty
+                  ? const SizedBox()
+                  : inboxItem(
+                      id: userChatData['userId'],
+                      name: userChatData['username'],
+                      image: userChatData['profileImage'],
+                      pushToken: userChatData['pushToken'],
+                      isOnline: userChatData['isOnline'],
+                      latestMessage: unreadMessages.last['message'],
+                      timeStamp: messageTime,
+                      isOpened: false,
+                      noOfUnreadMessages: unreadMessages.length,
+                    );
+        },
       );
-      // return inboxItem(
-      //   id: inboxData['userId'],
-      //   name: inboxData['username'],
-      //   image: inboxData['profileImage'],
-      //   pushToken: inboxData['pushToken'],
-      //   isOnline: true,
-      //   latestMessage: chatData['unreadMessages'].isEmpty
-      //       ? "Tap to chat"
-      //       : chatData['unreadMessages'].last['message'],
-      //   timeStamp: chatData['unreadMessages'].isEmpty
-      //       ? ""
-      //       : chatData['unreadMessages'].last['timestamp'],
-      //   isOpened: false,
-      //   noOfUnreadMessages: chatData['unreadMessages'].isEmpty
-      //       ? 0
-      //       : chatData['unreadMessages'].length,
-      // );
     }
   }
 

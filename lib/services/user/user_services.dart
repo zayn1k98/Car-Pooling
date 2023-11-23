@@ -3,12 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserServices {
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+  FirebaseAuth firebaseAuth = FirebaseAuth.instance;
+
   Future<void> updateActiveStatus({
     required bool isOnline,
   }) async {
-    FirebaseFirestore firestore = FirebaseFirestore.instance;
-    FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-
     String currentUserId = firebaseAuth.currentUser!.uid;
 
     final SharedPreferences sharedPreferences =
@@ -20,5 +20,14 @@ class UserServices {
       'isOnline': isOnline,
       'pushToken': pushToken,
     });
+  }
+
+  Future<Map<String, dynamic>> getUserData({required String userId}) async {
+    DocumentSnapshot userInfo =
+        await firestore.collection('users').doc(userId).get();
+
+    Map<String, dynamic> userData = userInfo.data() as Map<String, dynamic>;
+
+    return userData;
   }
 }

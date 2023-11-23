@@ -5,11 +5,44 @@ import 'package:car_pooling/services/notifications/notifications_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-class ChatService {
+class ChatService with ChangeNotifier {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore fireStore = FirebaseFirestore.instance;
+
+  List unreadMessages = [];
+
+  Future<List> getChatMessages({
+    required String docID,
+  }) async {
+    List messages = [];
+
+    QuerySnapshot chatMessages = await fireStore
+        .collection('chat_rooms')
+        .doc(docID)
+        .collection('chats')
+        .orderBy('timestamp', descending: false)
+        .get();
+
+    List allMessages = chatMessages.docs.toList();
+
+    for (var ele in allMessages) {
+      if (ele['isMessageRead'] == false &&
+          ele['receiverID'] != firebaseAuth.currentUser!.uid) {
+        messages.add(ele.data());
+      }
+    }
+
+    print("ALL MESSAGES : $messages");
+
+    unreadMessages = messages;
+
+    notifyListeners();
+
+    return unreadMessages;
+  }
 
   Stream<QuerySnapshot> getMessage({
     required String userId,
@@ -37,36 +70,46 @@ class ChatService {
     final String userID = firebaseAuth.currentUser!.uid;
     final Timestamp timestamp = Timestamp.now();
 
-    ChatMessage newMessage = ChatMessage(
+    ChatMessage chatData = ChatMessage(
+      senderID: userID,
+      receiverID: receiverID,
       message: message,
       timeStamp: timestamp,
       isMessageRead: false,
       messageType: MessageType.text,
     );
 
-    QuerySnapshot singleChat = await fireStore
+    // QuerySnapshot singleChat = await fireStore
+    //     .collection('chat_rooms')
+    //     .where('receiver_id', isEqualTo: receiverID)
+    //     .get();
+
+    // List singleChatList = singleChat.docs;
+
+    // Map<String, dynamic> chat = {
+    //   'sender_id': userID,
+    //   'receiver_id': receiverID,
+    //   'chats': singleChatList,
+    // };
+
+    List<String> ids = [userID, receiverID];
+
+    ids.sort();
+    String chatRoomID = ids.join("_");
+
+    await fireStore
+        .collection('chat_rooms')
+        .doc(chatRoomID)
         .collection('chats')
-        .where('receiver_id', isEqualTo: receiverID)
-        .get();
-
-    List singleChatList = singleChat.docs;
-
-    Map<String, dynamic> chat = {
-      'sender_id': userID,
-      'receiver_id': receiverID,
-      'chats': singleChatList,
-    };
-
-    // List<String> ids = [userID, receiverID];
-    // ids.sort();
-    // String chatRoomID = ids.join("_");
-
-    await fireStore.collection('chats').add(newMessage.toMap());
+        .add(chatData.toMap())
+        .then((value) {
+      print("MESSAGE SENT SUCCESSFULLY !!!");
+    });
 
     await NotificationService().sendNotification(
       pushToken: receiverPushToken,
       title: firebaseAuth.currentUser!.displayName!,
-      body: newMessage.message ?? "",
+      body: chatData.message ?? "",
       messageType: MessageType.text,
     );
   }

@@ -18,6 +18,7 @@ class ChatService with ChangeNotifier {
     required String docID,
   }) async {
     List messages = [];
+    List lastMessage = [];
 
     QuerySnapshot chatMessages = await fireStore
         .collection('chat_rooms')
@@ -32,12 +33,15 @@ class ChatService with ChangeNotifier {
       if (ele['isMessageRead'] == false &&
           ele['receiverID'] != firebaseAuth.currentUser!.uid) {
         messages.add(ele.data());
+      } else if (ele['isMessageRead'] == true &&
+          ele['receiverID'] != firebaseAuth.currentUser!.uid) {
+        lastMessage.add(ele.data());
       }
     }
 
-    print("ALL MESSAGES : $messages");
+    print("ALL MESSAGES : $messages + $lastMessage");
 
-    unreadMessages = messages;
+    unreadMessages = messages.isEmpty ? lastMessage : messages;
 
     notifyListeners();
 

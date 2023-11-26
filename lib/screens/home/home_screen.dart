@@ -181,7 +181,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       latestMessage: unreadMessages.last['message'],
                       timeStamp: messageTime,
                       isOpened: false,
-                      noOfUnreadMessages: unreadMessages.length,
+                      noOfUnreadMessages:
+                          unreadMessages.last['isMessageRead'] == true
+                              ? 0
+                              : unreadMessages.length,
                     );
         },
       );
@@ -235,32 +238,37 @@ class _HomeScreenState extends State<HomeScreen> {
           fontSize: 14,
         ),
       ),
-      trailing: noOfUnreadMessages == 0
-          ? const SizedBox()
-          : Column(
-              children: [
-                Text(
-                  timeStamp,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 12,
-                  ),
-                ),
-                const Spacer(),
-                CircleAvatar(
-                  radius: 10,
-                  backgroundColor: Colors.black,
-                  child: Text(
-                    "$noOfUnreadMessages",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-              ],
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            timeStamp,
+            style: const TextStyle(
+              color: Colors.grey,
+              fontSize: 12,
             ),
+          ),
+          noOfUnreadMessages == 0
+              ? const SizedBox()
+              : Column(
+                  children: [
+                    const Spacer(),
+                    CircleAvatar(
+                      radius: 10,
+                      backgroundColor: Colors.black,
+                      child: Text(
+                        "$noOfUnreadMessages",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                  ],
+                ),
+        ],
+      ),
     );
   }
 }

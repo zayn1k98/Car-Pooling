@@ -6,7 +6,6 @@
         android:enableOnBackInvokedCallback="true"
         >
         
-
         <meta-data 
         android:name="com.facebook.sdk.ApplicationId" 
         android:value="@string/facebook_app_id"/>
@@ -14,6 +13,11 @@
         <meta-data 
         android:name="com.facebook.sdk.ClientToken" 
         android:value="@string/facebook_client_token"/>
+
+        <!-- GOOGLE MAPS API KEY -->
+
+        <meta-data android:name="com.google.android.geo.API_KEY"
+               android:value="AIzaSyCWqvZppc29hkC5vtA4BpEkdeDhkqwltsk"/>
 
         <activity
             android:name=".MainActivity"

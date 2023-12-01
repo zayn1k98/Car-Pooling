@@ -35,7 +35,11 @@ class ChatService with ChangeNotifier {
         messages.add(ele.data());
       } else if (ele['isMessageRead'] == true &&
           ele['receiverID'] != firebaseAuth.currentUser!.uid) {
-        lastMessage.add(ele.data());
+        if (lastMessage.isEmpty) {
+          lastMessage.add(ele.data());
+        } else {
+          continue;
+        }
       }
     }
 

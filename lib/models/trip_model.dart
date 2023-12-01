@@ -8,6 +8,7 @@ class TripModel {
   String? departureDate;
   String? departureTime;
   Vehicle? vehicle;
+  DriverDetails? driverDetails;
   String? emptySeats;
   String? price;
   String? tripType;
@@ -22,6 +23,7 @@ class TripModel {
     this.departureDate,
     this.departureTime,
     this.vehicle,
+    this.driverDetails,
     this.emptySeats,
     this.price,
     this.tripType,
@@ -38,11 +40,38 @@ class TripModel {
       "departureDate": departureDate,
       "departureTime": departureTime,
       "vehicle": vehicle == null ? "no vehicle chosen" : vehicle!.toJson(),
+      "driverDetails": driverDetails!.toJson(),
       "emptySeats": emptySeats,
       "price": price,
       "tripType": tripType,
       "tripDescription": tripDescription,
       "status": status,
+    };
+  }
+}
+
+class DriverDetails {
+  String? driverName;
+  String? driverImage;
+  bool? isVerified;
+  String? pushToken;
+  String? rating;
+
+  DriverDetails({
+    this.driverName,
+    this.driverImage,
+    this.isVerified,
+    this.pushToken,
+    this.rating,
+  });
+
+  toJson() {
+    return {
+      "driverName": driverName,
+      "driverImage": driverImage,
+      "isVerified": isVerified,
+      "pushToken": pushToken,
+      "rating": rating,
     };
   }
 }

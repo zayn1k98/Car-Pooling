@@ -52,6 +52,8 @@ dependencies:
   http: ^1.1.0
   dotted_border: ^2.1.0
   provider: ^6.1.1
+  google_maps_flutter: ^2.5.0
+  google_map_polyline_new: ^0.3.0+2
 
 dev_dependencies:
   flutter_test:

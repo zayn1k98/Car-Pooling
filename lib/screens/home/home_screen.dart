@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:car_pooling/screens/chat_screen/chat_screen.dart';
 import 'package:car_pooling/services/chat/chat_service.dart';
 import 'package:car_pooling/services/user/user_services.dart';
@@ -28,11 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     getUserData();
     UserServices().updateActiveStatus(isOnline: true);
-
-    getUserMessageData(
-      messages: [],
-      receiverUserID: FirebaseAuth.instance.currentUser!.uid,
-    );
   }
 
   void getUserData() async {
@@ -50,31 +44,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Map<String, dynamic> userMessages = {};
   List unreadMessages = [];
-
-  void getUserMessageData({
-    required List<QueryDocumentSnapshot> messages,
-    required String receiverUserID,
-  }) async {
-    for (var ele in messages) {
-      Map<String, dynamic> data = ele.data() as Map<String, dynamic>;
-
-      if (data['userId'] != FirebaseAuth.instance.currentUser!.uid) {
-        userMessages = await ChatService().getUnreadMessages(
-          receiverUserID: data['userId'],
-        );
-
-        if (unreadMessages.contains(userMessages) || unreadMessages.isEmpty) {
-          unreadMessages.add(userMessages);
-        } else if (userMessages.isEmpty) {
-          unreadMessages.add({
-            'senderID': receiverUserID,
-            'unreadMessages': [],
-          });
-        }
-      }
-    }
-    log("All messages => $unreadMessages");
-  }
 
   bool isLoading = true;
 
@@ -164,10 +133,6 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         builder: (context, snapshot) {
-          Timestamp timestamp = unreadMessages.last['timestamp'];
-
-          DateTime dateTime = timestamp.toDate();
-          String messageTime = DateFormat('h:mm a').format(dateTime);
           return userChatData.isEmpty
               ? const LinearProgressIndicator()
               : unreadMessages.isEmpty
@@ -179,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       pushToken: userChatData['pushToken'],
                       isOnline: userChatData['isOnline'],
                       latestMessage: unreadMessages.last['message'],
-                      timeStamp: messageTime,
+                      timeStamp: unreadMessages.last['timestamp'],
                       isOpened: false,
                       noOfUnreadMessages:
                           unreadMessages.last['isMessageRead'] == true
@@ -198,14 +163,20 @@ class _HomeScreenState extends State<HomeScreen> {
     required String pushToken,
     required bool isOnline,
     required String latestMessage,
-    required String timeStamp,
+    required Timestamp timeStamp,
     required bool isOpened,
     required int noOfUnreadMessages,
   }) {
+    Timestamp timestamp = timeStamp;
+
+    DateTime dateTime = timestamp.toDate();
+    String messageTime = DateFormat('h:mm a').format(dateTime);
+
     return ListTile(
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
           return ChatScreen(
+            isNewChat: false,
             fromUserName: name,
             fromUserImage: image,
             fromUserId: id,
@@ -242,7 +213,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            timeStamp,
+            messageTime,
             style: const TextStyle(
               color: Colors.grey,
               fontSize: 12,

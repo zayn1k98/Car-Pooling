@@ -1,5 +1,4 @@
 import 'dart:developer';
-
 import 'package:car_pooling/models/trip_model.dart';
 import 'package:car_pooling/models/vehicle_model.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
@@ -8,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PostRideScreen extends StatefulWidget {
   const PostRideScreen({super.key});
@@ -32,22 +32,45 @@ class _PostRideScreenState extends State<PostRideScreen> {
   bool isAcceptedTNC = false;
 
   String? selectedVehicle;
-  List<String> vehicles = [];
+  List vehicles = [];
 
   int noOfEmptySeats = 0;
 
   final GlobalKey<FormState> formKey = GlobalKey();
+
+  void getVehicleDetails({
+    required String vehicleLicensePlate,
+  }) async {
+    chosenVehicle = await TripsService().getVehicleDetails(
+      licensePlate: vehicleLicensePlate,
+    );
+
+    print("VEHICLE DETAILS : ${chosenVehicle!.toJson()}");
+  }
 
   Vehicle? chosenVehicle;
 
   void postTrip() async {
     if (formKey.currentState!.validate()) {
       //* post trip
-      if (!isSkipVehicle && chosenVehicle == null) {
+      if (chosenVehicle == null) {
         Fluttertoast.showToast(msg: "Please fill the vehicle details");
       } else {
         if (isAcceptedTNC) {
           String userId = FirebaseAuth.instance.currentUser!.uid;
+
+          SharedPreferences sharedPreferences =
+              await SharedPreferences.getInstance();
+
+          final String? pushToken = sharedPreferences.getString('pushToken');
+
+          DriverDetails driverDetails = DriverDetails(
+            driverImage: FirebaseAuth.instance.currentUser!.photoURL,
+            driverName: FirebaseAuth.instance.currentUser!.displayName,
+            pushToken: pushToken,
+            isVerified: false,
+            rating: "2.5",
+          );
 
           TripModel trip = TripModel(
             userId: userId,
@@ -57,6 +80,7 @@ class _PostRideScreenState extends State<PostRideScreen> {
             departureDate: dateController.text,
             departureTime: timeController.text,
             vehicle: chosenVehicle,
+            driverDetails: driverDetails,
             emptySeats: "$noOfEmptySeats",
             price: priceController.text,
             tripType: "Request to book",
@@ -64,9 +88,11 @@ class _PostRideScreenState extends State<PostRideScreen> {
             status: "active",
           );
 
-          log("TRIP MODEL : ${trip.toJson()}");
+          print("TRIP MODEL : ${trip.toJson()}");
 
-          await TripsService().postTrip(trip: trip);
+          await TripsService().postTrip(trip: trip).then(
+                (value) => Navigator.pop(context),
+              );
         } else {
           Fluttertoast.showToast(
             msg:
@@ -84,7 +110,10 @@ class _PostRideScreenState extends State<PostRideScreen> {
 
     for (var ele in temp) {
       setState(() {
-        vehicles.add(ele['model']);
+        vehicles.add({
+          'name': ele['model'],
+          'licensePlate': ele['licensePlate'],
+        });
       });
     }
     log("$vehicles");
@@ -398,33 +427,33 @@ class _PostRideScreenState extends State<PostRideScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
-              child: Row(
-                children: [
-                  Checkbox(
-                    value: isSkipVehicle,
-                    onChanged: (value) {
-                      setState(() {
-                        isSkipVehicle = value!;
-                      });
-                    },
-                    activeColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                  ),
-                  const Text(
-                    "Skip vehicle",
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF858585),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // const SizedBox(height: 10),
+            // Padding(
+            //   padding: const EdgeInsets.symmetric(horizontal: 30),
+            //   child: Row(
+            //     children: [
+            //       Checkbox(
+            //         value: isSkipVehicle,
+            //         onChanged: (value) {
+            //           setState(() {
+            //             isSkipVehicle = value!;
+            //           });
+            //         },
+            //         activeColor: Colors.black,
+            //         shape: RoundedRectangleBorder(
+            //           borderRadius: BorderRadius.circular(5),
+            //         ),
+            //       ),
+            //       const Text(
+            //         "Skip vehicle",
+            //         style: TextStyle(
+            //           fontSize: 16,
+            //           color: Color(0xFF858585),
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
               child: Text(
@@ -439,11 +468,11 @@ class _PostRideScreenState extends State<PostRideScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 30),
               child: DropdownButtonFormField(
                 value: selectedVehicle,
-                items: vehicles.map<DropdownMenuItem<String>>((String ele) {
+                items: vehicles.map<DropdownMenuItem<String>>((var ele) {
                   return DropdownMenuItem<String>(
-                    value: ele,
+                    value: ele['licensePlate'],
                     child: Text(
-                      ele,
+                      ele['name'],
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.normal,
@@ -485,7 +514,12 @@ class _PostRideScreenState extends State<PostRideScreen> {
                 borderRadius: BorderRadius.circular(10),
                 onChanged: (value) {
                   setState(() {
-                    selectedVehicle = value;
+                    // selectedVehicle = value;
+                    print("vehicle license plate : $value");
+
+                    getVehicleDetails(
+                      vehicleLicensePlate: value ?? "",
+                    );
                   });
                 },
               ),

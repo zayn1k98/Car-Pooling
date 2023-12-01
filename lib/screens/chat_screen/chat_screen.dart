@@ -13,12 +13,14 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
+  final bool isNewChat;
   final String fromUserName;
   final String fromUserImage;
   final String fromUserId;
   final String userPushToken;
   final bool isUserOnline;
   const ChatScreen({
+    required this.isNewChat,
     required this.fromUserName,
     required this.fromUserImage,
     required this.fromUserId,

@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'package:car_pooling/models/trip_model.dart';
+import 'package:car_pooling/models/vehicle_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluttertoast/fluttertoast.dart';
@@ -25,6 +26,43 @@ class TripsService {
     }
 
     return vehicles;
+  }
+
+  Future<Vehicle> getVehicleDetails({
+    required String licensePlate,
+  }) async {
+    Vehicle vehicle = Vehicle();
+
+    QuerySnapshot vehicleDetails = await firestore
+        .collection('vehicles')
+        .where('licensePlate', isEqualTo: licensePlate)
+        .get();
+
+    if (vehicleDetails.docs.isNotEmpty) {
+      Map<String, dynamic> data =
+          vehicleDetails.docs.first.data() as Map<String, dynamic>;
+      vehicle = Vehicle(
+        vehicleImage: data['vehicleImage'],
+        userId: data['userId'],
+        model: data['model'],
+        type: data['type'],
+        color: data['color'],
+        year: data['year'],
+        licensePlate: data['licensePlate'],
+        luggageSize: data['luggageSize'],
+        seatingCapacity: data['seatingCapacity'],
+        isWinterTyres: data['isWinterTyres'],
+        isSnowboards: data['isSnowboards'],
+        isBikes: data['isBikes'],
+        isPets: data['isPets'],
+      );
+    } else {
+      Fluttertoast.showToast(
+        msg: "Error fetching vehicle details. Please try again later.",
+      );
+    }
+
+    return vehicle;
   }
 
   Future<void> postTrip({required TripModel trip}) async {

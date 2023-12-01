@@ -1,5 +1,8 @@
 import 'package:car_pooling/screens/chat_screen/chat_screen.dart';
+import 'package:car_pooling/screens/home/trips/request_to_book.dart';
+import 'package:car_pooling/widgets/map_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:intl/intl.dart';
 
 class TripsPreviewScreen extends StatefulWidget {
@@ -25,6 +28,12 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
     tripDate = DateFormat('EEE, MMM d').format(tripDateTime);
   }
 
+  double myLatitude = 12.963400;
+  double myLongitude = 77.586790;
+
+  double destLatitude = 12.963400;
+  double destLongitude = 77.583278;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,6 +56,7 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
         centerTitle: true,
       ),
       body: ListView(
+        physics: const BouncingScrollPhysics(),
         children: [
           Row(
             children: [
@@ -160,11 +170,11 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
             height: 60,
             child: Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Center(
                     child: Text(
-                      "6 seats left",
-                      style: TextStyle(
+                      "${widget.tripDetails['emptySeats']} seats left",
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -319,6 +329,12 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                   decoration: BoxDecoration(
                     color: Colors.blue[200],
                     borderRadius: BorderRadius.circular(10),
+                    image: DecorationImage(
+                      image: NetworkImage(
+                        widget.tripDetails['vehicle']['vehicleImage'],
+                      ),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
                 Expanded(
@@ -327,8 +343,12 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text("Chevrolet"),
-                        const Text("White, 2022"),
+                        Text(
+                          widget.tripDetails['vehicle']['model'],
+                        ),
+                        Text(
+                          "${widget.tripDetails['vehicle']['color']}, ${widget.tripDetails['vehicle']['year']}",
+                        ),
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -354,11 +374,17 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
               ],
             ),
           ),
-          Container(
+          SizedBox(
             height: 250,
-            color: Colors.blue[200],
-            child: const Center(
-              child: Text("Google Maps"),
+            child: MapWidget(
+              originCoordinates: LatLng(
+                myLatitude,
+                myLongitude,
+              ),
+              destinationCoordinates: LatLng(
+                destLatitude,
+                destLongitude,
+              ),
             ),
           ),
         ],
@@ -371,7 +397,12 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushReplacement(context,
+                        MaterialPageRoute(builder: (context) {
+                      return const RequestToBookScreen();
+                    }));
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFFF4E00),
                     shape: RoundedRectangleBorder(
@@ -405,6 +436,7 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                 onPressed: () {
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
                     return ChatScreen(
+                      isNewChat: true,
                       fromUserName: widget.tripDetails['driverDetails']
                           ['driverName'],
                       fromUserImage: widget.tripDetails['driverDetails']

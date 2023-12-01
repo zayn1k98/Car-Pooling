@@ -41,7 +41,7 @@ class Vehicle {
       "luggageSize": luggageSize,
       "seatingCapacity": seatingCapacity,
       "isWinterTyres": isWinterTyres,
-      "isSnownboards": isSnowboards,
+      "isSnowboards": isSnowboards,
       "isBikes": isBikes,
       "isPets": isPets,
     };

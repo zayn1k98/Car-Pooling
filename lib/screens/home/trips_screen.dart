@@ -156,8 +156,9 @@ class _TripsScreenState extends State<TripsScreen> {
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: activeTrips.length,
                   itemBuilder: (context, index) {
+                    print("TRIP : ${activeTrips[index].data()}");
                     return tripsCard(
-                      tripDetails: activeTrips[index],
+                      tripDetails: activeTrips[index].data(),
                     );
                   },
                 )
@@ -178,7 +179,7 @@ class _TripsScreenState extends State<TripsScreen> {
       padding: const EdgeInsets.all(10),
       child: GestureDetector(
         onTap: () {
-          print("TRIP DETAILS : ${tripDetails.data()}");
+          // print("TRIP DETAILS : ${tripDetails.data()}");
           Navigator.push(context, MaterialPageRoute(builder: (context) {
             return TripsPreviewScreen(
               tripDetails: tripDetails,
@@ -210,9 +211,9 @@ class _TripsScreenState extends State<TripsScreen> {
                       ),
                     ),
                     const Spacer(),
-                    const Text(
-                      "6 seats left",
-                      style: TextStyle(
+                    Text(
+                      "${tripDetails['emptySeats']} seats left",
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -353,7 +354,7 @@ class _TripsScreenState extends State<TripsScreen> {
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text(
-                  "${tripDetails['vehicle']}",
+                  "${tripDetails['vehicle']['model']}",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -375,22 +376,25 @@ class _TripsScreenState extends State<TripsScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    const CircleAvatar(
-                      backgroundImage:
-                          AssetImage('assets/images/user_image.jpg'),
+                    CircleAvatar(
+                      backgroundImage: NetworkImage(
+                        tripDetails['driverDetails']['driverImage'],
+                      ),
                     ),
-                    const Text(
-                      "Johnson",
-                      style: TextStyle(
+                    Text(
+                      tripDetails['driverDetails']['driverName'],
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    Image.asset(
-                      'assets/icons/verified.png',
-                      height: 26,
-                      width: 26,
-                    ),
+                    tripDetails['driverDetails']['isVerified']
+                        ? Image.asset(
+                            'assets/icons/verified.png',
+                            height: 26,
+                            width: 26,
+                          )
+                        : const SizedBox(),
                     const VerticalDivider(
                       width: 1,
                     ),
@@ -399,9 +403,9 @@ class _TripsScreenState extends State<TripsScreen> {
                       color: Colors.amber,
                       size: 22,
                     ),
-                    const Text(
-                      "4.6",
-                      style: TextStyle(
+                    Text(
+                      tripDetails['driverDetails']['rating'],
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),

@@ -3,6 +3,7 @@ import 'package:car_pooling/screens/home/trips/trip_preview.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TripsScreen extends StatefulWidget {
   const TripsScreen({super.key});
@@ -16,11 +17,19 @@ class _TripsScreenState extends State<TripsScreen> {
   bool isRecent = false;
   bool isCancelled = false;
 
+  String? userId;
+
   @override
   void initState() {
     super.initState();
 
+    getCurrentUserId();
     getAllTrips();
+  }
+
+  void getCurrentUserId() async {
+    SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+    userId = sharedPreferences.getString('userId');
   }
 
   List allTrips = [];
@@ -30,7 +39,7 @@ class _TripsScreenState extends State<TripsScreen> {
     allTrips = await TripsService().getTrips();
 
     for (var ele in allTrips) {
-      if (ele['status'] == 'active') {
+      if (ele['status'] == 'active' && ele['userId'] != userId) {
         setState(() {
           activeTrips.add(ele);
         });
@@ -151,17 +160,21 @@ class _TripsScreenState extends State<TripsScreen> {
           ),
           const SizedBox(height: 30),
           isActive
-              ? ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: activeTrips.length,
-                  itemBuilder: (context, index) {
-                    print("TRIP : ${activeTrips[index].data()}");
-                    return tripsCard(
-                      tripDetails: activeTrips[index].data(),
-                    );
-                  },
-                )
+              ? activeTrips.isEmpty
+                  ? const Center(
+                      child: Text("No active trips available"),
+                    )
+                  : ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: activeTrips.length,
+                      itemBuilder: (context, index) {
+                        print("TRIP : ${activeTrips[index].data()}");
+                        return tripsCard(
+                          tripDetails: activeTrips[index].data(),
+                        );
+                      },
+                    )
               : isRecent
                   ? const Column()
                   : const Column(),

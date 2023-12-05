@@ -43,7 +43,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Map<String, dynamic> userMessages = {};
-  List unreadMessages = [];
 
   bool isLoading = true;
 
@@ -101,12 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Future<void> getUnreadMessages({required String documentId}) async {
-    unreadMessages = await ChatService().getChatMessages(
-      docID: documentId,
-    );
-  }
-
   Widget buildInboxList({required DocumentSnapshot snapshot}) {
     Map<String, dynamic> inboxData = snapshot.data() as Map<String, dynamic>;
 
@@ -114,28 +107,25 @@ class _HomeScreenState extends State<HomeScreen> {
         FirebaseAuth.instance.currentUser!.uid != inboxData['sender_id']) {
       return const SizedBox();
     } else {
-      getUnreadMessages(documentId: inboxData['doc_id']);
-
       Map<String, dynamic> userChatData = {};
+      List messages = [];
 
       return FutureBuilder(
         future: Future(
           () async {
-            getUnreadMessages(
-              documentId: inboxData['doc_id'],
+            messages = await ChatService().getChatMessages(
+              docID: inboxData['doc_id'],
             );
 
             userChatData = await UserServices().getUserData(
               userId: inboxData['receiver_id'],
             );
-
-            print("USER DATA !!! = $userChatData");
           },
         ),
         builder: (context, snapshot) {
           return userChatData.isEmpty
               ? const LinearProgressIndicator()
-              : unreadMessages.isEmpty
+              : messages.isEmpty
                   ? const SizedBox()
                   : inboxItem(
                       id: userChatData['userId'],
@@ -143,13 +133,13 @@ class _HomeScreenState extends State<HomeScreen> {
                       image: userChatData['profileImage'],
                       pushToken: userChatData['pushToken'],
                       isOnline: userChatData['isOnline'],
-                      latestMessage: unreadMessages.last['message'],
-                      timeStamp: unreadMessages.last['timestamp'],
+                      latestMessage: messages.first['message'],
+                      timeStamp: messages.first['timestamp'],
                       isOpened: false,
                       noOfUnreadMessages:
-                          unreadMessages.last['isMessageRead'] == true
+                          messages.first['isMessageRead'] == true
                               ? 0
-                              : unreadMessages.length,
+                              : messages.length,
                     );
         },
       );
@@ -223,19 +213,20 @@ class _HomeScreenState extends State<HomeScreen> {
               ? const SizedBox()
               : Column(
                   children: [
-                    const Spacer(),
-                    CircleAvatar(
-                      radius: 10,
-                      backgroundColor: Colors.black,
-                      child: Text(
-                        "$noOfUnreadMessages",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: CircleAvatar(
+                        radius: 10,
+                        backgroundColor: Colors.black,
+                        child: Text(
+                          "$noOfUnreadMessages",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                          ),
                         ),
                       ),
                     ),
-                    const Spacer(),
                   ],
                 ),
         ],

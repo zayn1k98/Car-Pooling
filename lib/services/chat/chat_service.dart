@@ -6,7 +6,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 class ChatService with ChangeNotifier {
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
@@ -17,35 +16,36 @@ class ChatService with ChangeNotifier {
   Future<List> getChatMessages({
     required String docID,
   }) async {
-    List messages = [];
-    List lastMessage = [];
+    List unreadMessages = [];
+    List readMessages = [];
 
     QuerySnapshot chatMessages = await fireStore
         .collection('chat_rooms')
         .doc(docID)
         .collection('chats')
-        .orderBy('timestamp', descending: false)
+        .orderBy('timestamp', descending: true)
         .get();
 
     List allMessages = chatMessages.docs.toList();
 
     for (var ele in allMessages) {
+      String otherUserId = ele['receiverID'] != firebaseAuth.currentUser!.uid
+          ? ele['receiverID']
+          : ele['senderID'];
       if (ele['isMessageRead'] == false &&
-          ele['receiverID'] != firebaseAuth.currentUser!.uid) {
-        messages.add(ele.data());
+          otherUserId != firebaseAuth.currentUser!.uid) {
+        unreadMessages.add(ele.data());
       } else if (ele['isMessageRead'] == true &&
-          ele['receiverID'] != firebaseAuth.currentUser!.uid) {
-        if (lastMessage.isEmpty) {
-          lastMessage.add(ele.data());
+          otherUserId != firebaseAuth.currentUser!.uid) {
+        if (readMessages.isEmpty) {
+          readMessages.add(ele.data());
         } else {
           continue;
         }
       }
     }
 
-    print("ALL MESSAGES : $messages + $lastMessage");
-
-    unreadMessages = messages.isEmpty ? lastMessage : messages;
+    unreadMessages = unreadMessages.isEmpty ? readMessages : unreadMessages;
 
     notifyListeners();
 
@@ -107,6 +107,7 @@ class ChatService with ChangeNotifier {
 
     await fireStore.collection('chat_rooms').doc(chatRoomID).set(
       {
+        'doc_id': chatRoomID,
         'sender_id': userID,
         'receiver_id': receiverID,
       },
@@ -174,7 +175,7 @@ class ChatService with ChangeNotifier {
       await fireStore
           .collection('chat_rooms')
           .doc(chatRoomID)
-          .collection('messages')
+          .collection('unreadMessages')
           .add(newMessage.toMap());
 
       await NotificationService().sendNotification(
@@ -190,44 +191,44 @@ class ChatService with ChangeNotifier {
 
   //? GETTING ALL THE UNREAD MESSAGES FOR EACH CHAT ON THE HOME SCREEN
 
-  Future<Map<String, dynamic>> getUnreadMessages({
-    required String receiverUserID,
-  }) async {
-    List unreadMessages = [];
-    String userID = FirebaseAuth.instance.currentUser!.uid;
+  // Future<Map<String, dynamic>> getUnreadMessages({
+  //   required String receiverUserID,
+  // }) async {
+  //   List unreadMessages = [];
+  //   String userID = FirebaseAuth.instance.currentUser!.uid;
 
-    List<String> ids = [receiverUserID, userID];
-    ids.sort();
-    String chatRoomID = ids.join('_');
+  //   List<String> ids = [receiverUserID, userID];
+  //   ids.sort();
+  //   String chatRoomID = ids.join('_');
 
-    QuerySnapshot allMessages = await FirebaseFirestore.instance
-        .collection('chat_rooms')
-        .doc(chatRoomID)
-        .collection('messages')
-        .get();
+  //   QuerySnapshot allMessages = await FirebaseFirestore.instance
+  //       .collection('chat_rooms')
+  //       .doc(chatRoomID)
+  //       .collection('unreadMessages')
+  //       .get();
 
-    List messages =
-        allMessages.docs.map((document) => document.data()).toList();
+  //   List unreadMessages =
+  //       allMessages.docs.map((document) => document.data()).toList();
 
-    Map<String, dynamic> unreadMessageModel = {};
+  //   Map<String, dynamic> unreadMessageModel = {};
 
-    for (var ele in messages) {
-      DateTime messageDateTime = (ele['timestamp'] as Timestamp).toDate();
-      String messageTime = DateFormat('h:mm a').format(messageDateTime);
-      // log("${ele['message']} = at $messageTime : seen = ${ele['isMessageRead']}");
-      if (ele['isMessageRead'] == false && ele['senderID'] != userID) {
-        unreadMessages.add({
-          'message': ele['message'],
-          'timestamp': messageTime,
-        });
-        unreadMessageModel = {
-          'senderID': receiverUserID,
-          'unreadMessages': unreadMessages,
-        };
-      } else {
-        continue;
-      }
-    }
-    return unreadMessageModel;
-  }
+  //   for (var ele in unreadMessages) {
+  //     DateTime messageDateTime = (ele['timestamp'] as Timestamp).toDate();
+  //     String messageTime = DateFormat('h:mm a').format(messageDateTime);
+  //     // log("${ele['message']} = at $messageTime : seen = ${ele['isMessageRead']}");
+  //     if (ele['isMessageRead'] == false && ele['senderID'] != userID) {
+  //       unreadMessages.add({
+  //         'message': ele['message'],
+  //         'timestamp': messageTime,
+  //       });
+  //       unreadMessageModel = {
+  //         'senderID': receiverUserID,
+  //         'unreadMessages': unreadMessages,
+  //       };
+  //     } else {
+  //       continue;
+  //     }
+  //   }
+  //   return unreadMessageModel;
+  // }
 }

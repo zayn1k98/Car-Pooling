@@ -110,6 +110,11 @@ class _HomeScreenState extends State<HomeScreen> {
       Map<String, dynamic> userChatData = {};
       List messages = [];
 
+      String otherUserId =
+          inboxData['receiver_id'] != FirebaseAuth.instance.currentUser!.uid
+              ? inboxData['receiver_id']
+              : inboxData['sender_id'];
+
       return FutureBuilder(
         future: Future(
           () async {
@@ -118,7 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
 
             userChatData = await UserServices().getUserData(
-              userId: inboxData['receiver_id'],
+              userId: otherUserId,
             );
           },
         ),

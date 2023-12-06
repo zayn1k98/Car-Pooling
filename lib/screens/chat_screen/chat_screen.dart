@@ -34,6 +34,19 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _ChatScreenState extends State<ChatScreen> {
+  void markUnreadMessagesAsRead() async {
+    await ChatService().markAllUnreadMessagesAsRead(
+      otherUserId: widget.fromUserId,
+    );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    markUnreadMessagesAsRead();
+  }
+
   TextEditingController messageController = TextEditingController();
 
   final ChatService chatService = ChatService();

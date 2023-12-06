@@ -109,6 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } else {
       Map<String, dynamic> userChatData = {};
       List messages = [];
+      int noOfUnreadMessages = 0;
 
       String otherUserId =
           inboxData['receiver_id'] != FirebaseAuth.instance.currentUser!.uid
@@ -122,6 +123,17 @@ class _HomeScreenState extends State<HomeScreen> {
               docID: inboxData['doc_id'],
             );
 
+            if (messages.first['isMessageRead'] == true) {
+              noOfUnreadMessages = 0;
+            } else {
+              if (messages.first['senderID'] ==
+                  FirebaseAuth.instance.currentUser!.uid) {
+                noOfUnreadMessages = 0;
+              } else {
+                noOfUnreadMessages = messages.length;
+              }
+            }
+
             userChatData = await UserServices().getUserData(
               userId: otherUserId,
             );
@@ -129,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         builder: (context, snapshot) {
           return userChatData.isEmpty
-              ? const LinearProgressIndicator()
+              ? const SizedBox()
               : messages.isEmpty
                   ? const SizedBox()
                   : inboxItem(
@@ -141,10 +153,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       latestMessage: messages.first['message'],
                       timeStamp: messages.first['timestamp'],
                       isOpened: false,
-                      noOfUnreadMessages:
-                          messages.first['isMessageRead'] == true
-                              ? 0
-                              : messages.length,
+                      noOfUnreadMessages: noOfUnreadMessages,
                     );
         },
       );

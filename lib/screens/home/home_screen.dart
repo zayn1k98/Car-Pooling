@@ -187,7 +187,9 @@ class _HomeScreenState extends State<HomeScreen> {
             userPushToken: pushToken,
             isUserOnline: isOnline,
           );
-        }));
+        })).then((value) {
+          setState(() {});
+        });
       },
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(30),

@@ -1,6 +1,7 @@
 import 'dart:developer';
 import 'package:car_pooling/models/trip_model.dart';
 import 'package:car_pooling/models/vehicle_model.dart';
+import 'package:car_pooling/screens/home/post_ride/location_picker_screen.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -936,48 +937,58 @@ class _PostRideScreenState extends State<PostRideScreen> {
     return Padding(
       padding:
           EdgeInsets.symmetric(horizontal: isAdditionalStop == true ? 0 : 30),
-      child: TextFormField(
-        controller: controller,
-        decoration: InputDecoration(
-          filled: true,
-          fillColor:
-              isAdditionalStop == true ? Colors.white : const Color(0xFFECECEC),
-          prefixIcon: isAdditionalStop == true
-              ? null
-              : const Icon(
-                  Icons.location_on,
-                  color: Colors.black,
-                ),
-          hintText: hint,
-          hintStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.normal,
-            color: Color(0xFF858585),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        validator: (value) {
-          if (value == null || value.isEmpty) {
-            return 'Please fill the required field';
-          }
-          return null;
+      child: GestureDetector(
+        onTap: () {
+          print("OPEN LOCATION PICKER");
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            return const LocationPickerScreen();
+          }));
         },
+        child: TextFormField(
+          controller: controller,
+          decoration: InputDecoration(
+            enabled: false,
+            filled: true,
+            fillColor: isAdditionalStop == true
+                ? Colors.white
+                : const Color(0xFFECECEC),
+            prefixIcon: isAdditionalStop == true
+                ? null
+                : const Icon(
+                    Icons.location_on,
+                    color: Colors.black,
+                  ),
+            hintText: hint,
+            hintStyle: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.normal,
+              color: Color(0xFF858585),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+            disabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: BorderSide.none,
+            ),
+          ),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please fill the required field';
+            }
+            return null;
+          },
+        ),
       ),
     );
   }

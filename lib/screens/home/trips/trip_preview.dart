@@ -437,14 +437,7 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                   Navigator.push(context, MaterialPageRoute(builder: (context) {
                     return ChatScreen(
                       isNewChat: true,
-                      fromUserName: widget.tripDetails['driverDetails']
-                          ['driverName'],
-                      fromUserImage: widget.tripDetails['driverDetails']
-                          ['driverImage'],
-                      fromUserId: widget.tripDetails['userId'],
-                      userPushToken: widget.tripDetails['driverDetails']
-                          ['pushToken'],
-                      isUserOnline: false,
+                      userData: widget.tripDetails,
                     );
                   }));
                 },

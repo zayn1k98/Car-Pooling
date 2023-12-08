@@ -29,10 +29,6 @@ class ChatService with ChangeNotifier {
     List allMessages = chatMessages.docs.toList();
 
     for (var ele in allMessages) {
-      // String otherUserId = ele['receiverID'] != firebaseAuth.currentUser!.uid
-      //     ? ele['receiverID']
-      //     : ele['senderID'];
-
       if (ele['senderID'] != firebaseAuth.currentUser!.uid) {
         if (ele['isMessageRead'] == false) {
           unreadMessages.add(ele.data());
@@ -50,21 +46,6 @@ class ChatService with ChangeNotifier {
           continue;
         }
       }
-
-      print("UNREAD MESSAGES : $unreadMessages");
-      print("READ MESSAGES : $readMessages");
-
-      // if (ele['isMessageRead'] == false &&
-      //     otherUserId != firebaseAuth.currentUser!.uid) {
-      //   unreadMessages.add(ele.data());
-      // } else if (ele['isMessageRead'] == true &&
-      //     otherUserId != firebaseAuth.currentUser!.uid) {
-      //   if (readMessages.isEmpty) {
-      //     readMessages.add(ele.data());
-      //   } else {
-      //     continue;
-      //   }
-      // }
     }
 
     unreadMessages = unreadMessages.isEmpty ? readMessages : unreadMessages;

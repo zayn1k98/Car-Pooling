@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:car_pooling/screens/landing_screen/landing_screen.dart';
 import 'package:car_pooling/screens/main_screen.dart';
 import 'package:car_pooling/services/notifications/notifications_service.dart';
+import 'package:car_pooling/services/user/user_services.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -29,7 +30,7 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   bool isLoggedIn = false;
   Widget? firstPage;
 
@@ -47,9 +48,27 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    isUserLoggedIn();
-
     super.initState();
+
+    isUserLoggedIn();
+    UserServices().updateOnlineStatus(isOnline: online);
+
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  bool online = true;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    bool isBackground = state == AppLifecycleState.paused;
+    bool isClosed = state == AppLifecycleState.detached;
+    bool isActive = state == AppLifecycleState.resumed;
+
+    isBackground == false && isClosed == false && isActive == true
+        ? UserServices().updateOnlineStatus(isOnline: online)
+        : UserServices().updateOnlineStatus(isOnline: !online);
   }
 
   @override
@@ -57,6 +76,7 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ChatService()),
+        ChangeNotifierProvider(create: (_) => UserServices()),
       ],
       child: MaterialApp(
         title: 'Car Pooling',

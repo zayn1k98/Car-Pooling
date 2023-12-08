@@ -3,29 +3,23 @@ import 'dart:io';
 import 'package:car_pooling/models/message_model.dart';
 import 'package:car_pooling/screens/chat_screen/image_view.dart';
 import 'package:car_pooling/services/chat/chat_service.dart';
+import 'package:car_pooling/services/user/user_services.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:intl/intl.dart';
 
 class ChatScreen extends StatefulWidget {
   final bool isNewChat;
-  final String fromUserName;
-  final String fromUserImage;
-  final String fromUserId;
-  final String userPushToken;
-  final bool isUserOnline;
+  final Map<String, dynamic> userData;
   const ChatScreen({
     required this.isNewChat,
-    required this.fromUserName,
-    required this.fromUserImage,
-    required this.fromUserId,
-    required this.userPushToken,
-    required this.isUserOnline,
+    required this.userData,
     super.key,
   });
 
@@ -36,7 +30,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   void markUnreadMessagesAsRead() async {
     await ChatService().markAllUnreadMessagesAsRead(
-      otherUserId: widget.fromUserId,
+      otherUserId: widget.userData['userId'],
     );
   }
 
@@ -45,6 +39,11 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
 
     markUnreadMessagesAsRead();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
   }
 
   TextEditingController messageController = TextEditingController();
@@ -56,8 +55,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void sendMessage() async {
     if (messageController.text.isNotEmpty) {
       await chatService.sendMessage(
-        receiverID: widget.fromUserId,
-        receiverPushToken: widget.userPushToken,
+        receiverID: widget.userData['userId'],
+        receiverPushToken: widget.userData['pushToken'],
         message: messageController.text,
       );
 
@@ -70,8 +69,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void sendImage() async {
     await chatService.uploadAndSendImageOrFile(
       file: File(selectedImage!.path),
-      receiverID: widget.fromUserId,
-      receiverPushToken: widget.userPushToken,
+      receiverID: widget.userData['userId'],
+      receiverPushToken: widget.userData['pushToken'],
       isImage: true,
     );
 
@@ -83,8 +82,8 @@ class _ChatScreenState extends State<ChatScreen> {
   void sendFile() async {
     await chatService.uploadAndSendImageOrFile(
       file: selectedFile!,
-      receiverID: widget.fromUserId,
-      receiverPushToken: widget.userPushToken,
+      receiverID: widget.userData['userId'],
+      receiverPushToken: widget.userData['pushToken'],
       isImage: false,
     );
     setState(() {
@@ -103,13 +102,13 @@ class _ChatScreenState extends State<ChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: StreamBuilder(
                 stream: chatService.getMessage(
-                  userId: widget.fromUserId,
+                  userId: widget.userData['userId'],
                   otherUserId: firebaseAuth.currentUser!.uid,
                 ),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(
-                      child: Text("Loading"),
+                      child: CircularProgressIndicator(),
                     );
                   }
                   if (snapshot.data!.docs.isEmpty) {
@@ -149,7 +148,24 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  Future<bool> checkUserOnlineStatus({
+    required String userId,
+  }) async {
+    bool isOnline = false;
+    DocumentReference documentReference =
+        FirebaseFirestore.instance.collection('users').doc(userId);
+
+    documentReference.snapshots().listen((event) async {
+      isOnline = event.get('isOnline');
+      print("$isOnline");
+      isOnline ? print("user is online") : print("user is offline");
+    });
+
+    return isOnline;
+  }
+
   PreferredSizeWidget chatScreenAppBar() {
+    bool isUserOnline = false;
     return AppBar(
       leading: IconButton(
         onPressed: () {
@@ -160,58 +176,69 @@ class _ChatScreenState extends State<ChatScreen> {
           size: 36,
         ),
       ),
-      title: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(30),
-            child: Image.network(
-              widget.fromUserImage,
-              height: 50,
-              width: 50,
-              fit: BoxFit.cover,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 5),
-                  child: Text(
-                    widget.fromUserName,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+      title: StreamBuilder(
+        stream: Stream.fromFuture(
+          Future(() async {
+            isUserOnline = await checkUserOnlineStatus(
+              userId: widget.userData['userId'],
+            );
+          }),
+        ),
+        builder: (context, snapshot) {
+          return Row(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(30),
+                child: Image.network(
+                  widget.userData['profileImage'],
+                  height: 50,
+                  width: 50,
+                  fit: BoxFit.cover,
                 ),
-                Row(
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    CircleAvatar(
-                      radius: 3,
-                      backgroundColor: widget.isUserOnline
-                          ? Colors.greenAccent[700]
-                          : Colors.grey[300],
-                    ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 4),
+                      padding: const EdgeInsets.only(bottom: 5),
                       child: Text(
-                        widget.isUserOnline ? "Online" : "Offline",
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: widget.isUserOnline
-                              ? Colors.greenAccent[700]
-                              : Colors.grey[300],
+                        widget.userData['username'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 3.5,
+                          backgroundColor: widget.userData['isOnline']
+                              ? Colors.greenAccent[700]
+                              : Colors.grey[400],
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 4),
+                          child: Text(
+                            widget.userData['isOnline'] ? "Online" : "Offline",
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: widget.userData['isOnline']
+                                  ? Colors.greenAccent[700]
+                                  : Colors.grey[400],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            ],
+          );
+        },
       ),
       actions: [
         IconButton(

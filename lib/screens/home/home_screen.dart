@@ -26,7 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     getUserData();
-    UserServices().updateActiveStatus(isOnline: true);
   }
 
   void getUserData() async {
@@ -38,8 +37,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     super.dispose();
-
-    UserServices().updateActiveStatus(isOnline: false);
   }
 
   Map<String, dynamic> userMessages = {};
@@ -145,11 +142,7 @@ class _HomeScreenState extends State<HomeScreen> {
               : messages.isEmpty
                   ? const SizedBox()
                   : inboxItem(
-                      id: userChatData['userId'],
-                      name: userChatData['username'],
-                      image: userChatData['profileImage'],
-                      pushToken: userChatData['pushToken'],
-                      isOnline: userChatData['isOnline'],
+                      userData: userChatData,
                       latestMessage: messages.first['message'],
                       timeStamp: messages.first['timestamp'],
                       isOpened: false,
@@ -161,11 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget inboxItem({
-    required String id,
-    required String name,
-    required String image,
-    required String pushToken,
-    required bool isOnline,
+    required Map<String, dynamic> userData,
     required String latestMessage,
     required Timestamp timeStamp,
     required bool isOpened,
@@ -181,11 +170,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
           return ChatScreen(
             isNewChat: false,
-            fromUserName: name,
-            fromUserImage: image,
-            fromUserId: id,
-            userPushToken: pushToken,
-            isUserOnline: isOnline,
+            userData: userData,
           );
         })).then((value) {
           setState(() {});
@@ -194,14 +179,14 @@ class _HomeScreenState extends State<HomeScreen> {
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: Image.network(
-          image,
+          userData['profileImage'],
           height: 50,
           width: 50,
           fit: BoxFit.cover,
         ),
       ),
       title: Text(
-        name,
+        userData['username'],
         style: const TextStyle(
           color: Colors.black,
           fontSize: 16,

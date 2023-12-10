@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'package:car_pooling/models/message_model.dart';
@@ -148,24 +149,21 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Future<bool> checkUserOnlineStatus({
+  Stream<DocumentSnapshot> checkUserOnlineStatus({
     required String userId,
-  }) async {
-    bool isOnline = false;
+  }) {
     DocumentReference documentReference =
         FirebaseFirestore.instance.collection('users').doc(userId);
 
     documentReference.snapshots().listen((event) async {
-      isOnline = event.get('isOnline');
-      print("$isOnline");
-      isOnline ? print("user is online") : print("user is offline");
+      bool isUserOnline = await event.get('isOnline');
+      isUserOnline ? print("user is online") : print("user is offline");
     });
 
-    return isOnline;
+    return documentReference.snapshots();
   }
 
   PreferredSizeWidget chatScreenAppBar() {
-    bool isUserOnline = false;
     return AppBar(
       leading: IconButton(
         onPressed: () {
@@ -177,14 +175,12 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
       ),
       title: StreamBuilder(
-        stream: Stream.fromFuture(
-          Future(() async {
-            isUserOnline = await checkUserOnlineStatus(
-              userId: widget.userData['userId'],
-            );
-          }),
+        stream: checkUserOnlineStatus(
+          userId: widget.userData['userId'],
         ),
         builder: (context, snapshot) {
+          Map<String, dynamic> userMap =
+              snapshot.data!.data() as Map<String, dynamic>;
           return Row(
             children: [
               ClipRRect(
@@ -215,17 +211,17 @@ class _ChatScreenState extends State<ChatScreen> {
                       children: [
                         CircleAvatar(
                           radius: 3.5,
-                          backgroundColor: widget.userData['isOnline']
+                          backgroundColor: userMap['isOnline']
                               ? Colors.greenAccent[700]
                               : Colors.grey[400],
                         ),
                         Padding(
                           padding: const EdgeInsets.only(left: 4),
                           child: Text(
-                            widget.userData['isOnline'] ? "Online" : "Offline",
+                            userMap['isOnline'] ? "Online" : "Offline",
                             style: TextStyle(
                               fontSize: 11,
-                              color: widget.userData['isOnline']
+                              color: userMap['isOnline']
                                   ? Colors.greenAccent[700]
                                   : Colors.grey[400],
                             ),

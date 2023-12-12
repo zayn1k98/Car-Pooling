@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'package:car_pooling/screens/home/trips/trip_preview.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
 import 'package:flutter/material.dart';
@@ -39,12 +38,12 @@ class _TripsScreenState extends State<TripsScreen> {
     allTrips = await TripsService().getTrips();
 
     for (var ele in allTrips) {
-      if (ele['status'] == 'active' && ele['userId'] != userId) {
+      if (ele['userId'] != userId) {
         setState(() {
           activeTrips.add(ele);
         });
       }
-      log("status : ${ele['status']} on ${ele['departureDate']}");
+      print("status : ${ele['status']} on ${ele['departureDate']}");
     }
   }
 

@@ -1,6 +1,7 @@
+import 'package:car_pooling/screens/find_trip/find_trip_screen.dart';
 import 'package:car_pooling/screens/home/account_screen.dart';
 import 'package:car_pooling/screens/home/home_screen.dart';
-import 'package:car_pooling/screens/home/post_ride/post_ride_screen.dart';
+import 'package:car_pooling/screens/home/post_options/post_options_screen.dart';
 import 'package:car_pooling/screens/home/trips_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -39,7 +40,11 @@ class _MainScreenState extends State<MainScreen> {
         ),
         actions: [
           TextButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return const FindTripScreen();
+              }));
+            },
             style: TextButton.styleFrom(
               side: const BorderSide(
                 color: Colors.black,
@@ -61,7 +66,7 @@ class _MainScreenState extends State<MainScreen> {
             child: TextButton.icon(
               onPressed: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
-                  return const PostRideScreen();
+                  return const PostOptionsScreen();
                 }));
               },
               style: TextButton.styleFrom(

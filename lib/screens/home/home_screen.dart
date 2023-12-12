@@ -43,10 +43,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool isLoading = true;
 
+  String? searchKey;
+  void searchString({required String key}) {
+    setState(() {
+      searchKey = key;
+    });
+    print("SEARCH KEY = = = > $searchKey");
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: ListView(
+        physics: const NeverScrollableScrollPhysics(),
         children: [
           const Padding(
             padding: EdgeInsets.only(top: 20, left: 20, bottom: 10),
@@ -68,31 +77,75 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               leading: const Icon(Icons.search),
               hintText: "Search messages",
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 16),
-            child: StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('chat_rooms')
-                  .snapshots(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
-                    child: Text("Loading..."),
-                  );
+              onChanged: (value) {
+                if (searchController.value.text.isNotEmpty) {
+                  searchString(key: value);
+                } else {
+                  setState(() {
+                    searchKey = null;
+                  });
                 }
-                return Column(
-                  children: snapshot.data!.docs.map<Widget>((doc) {
-                    return buildInboxList(
-                      snapshot: doc,
-                    );
-                  }).toList(),
-                );
               },
             ),
           ),
+          searchKey != null ? searchTextBuilder() : allChats(),
         ],
+      ),
+    );
+  }
+
+  Widget searchTextBuilder() {
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const BouncingScrollPhysics(),
+      itemCount: 6,
+      itemBuilder: (context, index) {
+        return const ListTile(
+          title: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text("Username"),
+                  Text("23 nov 2023"),
+                ],
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: Text(
+                  "This is a sample message being used to test the search functionality of the search box in the home page.",
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.only(top: 10),
+                child: Divider(),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget allChats() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance.collection('chat_rooms').snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: Text("Loading..."),
+            );
+          }
+          return Column(
+            children: snapshot.data!.docs.map<Widget>((doc) {
+              return buildInboxList(
+                snapshot: doc,
+              );
+            }).toList(),
+          );
+        },
       ),
     );
   }

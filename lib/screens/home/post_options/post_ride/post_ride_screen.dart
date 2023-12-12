@@ -1,7 +1,7 @@
 import 'dart:developer';
 import 'package:car_pooling/models/trip_model.dart';
 import 'package:car_pooling/models/vehicle_model.dart';
-import 'package:car_pooling/screens/home/post_ride/location_picker_screen.dart';
+import 'package:car_pooling/screens/home/post_options/post_ride/location_picker_screen.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';

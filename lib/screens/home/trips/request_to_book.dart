@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
 class RequestToBookScreen extends StatefulWidget {
-  const RequestToBookScreen({super.key});
+  final dynamic tripDetails;
+  const RequestToBookScreen({
+    required this.tripDetails,
+    super.key,
+  });
 
   @override
   State<RequestToBookScreen> createState() => _RequestToBookScreenState();
@@ -308,9 +312,9 @@ class _RequestToBookScreenState extends State<RequestToBookScreen> {
                 borderRadius: BorderRadius.circular(30),
               ),
             ),
-            const Expanded(
+            Expanded(
               child: Padding(
-                padding: EdgeInsets.only(left: 30),
+                padding: const EdgeInsets.only(left: 30),
                 child: SizedBox(
                   height: 150,
                   child: Column(
@@ -318,24 +322,24 @@ class _RequestToBookScreenState extends State<RequestToBookScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Origin",
-                        style: TextStyle(
+                        "${widget.tripDetails['origin']}",
+                        style: const TextStyle(
                           color: Colors.blue,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text("Origin"),
-                      SizedBox(height: 10),
+                      const Text("Origin"),
+                      const SizedBox(height: 10),
                       Text(
-                        "Destination",
-                        style: TextStyle(
+                        "${widget.tripDetails['destination']}",
+                        style: const TextStyle(
                           color: Colors.blue,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Text("Destination"),
+                      const Text("Destination"),
                     ],
                   ),
                 ),
@@ -353,11 +357,11 @@ class _RequestToBookScreenState extends State<RequestToBookScreen> {
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 30),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Text(
-            "Random test description for the trip just to check the alignment and the ui layout for the screen.",
-            style: TextStyle(
+            "${widget.tripDetails['tripDescription']}",
+            style: const TextStyle(
               fontSize: 16,
             ),
           ),
@@ -381,26 +385,31 @@ class _RequestToBookScreenState extends State<RequestToBookScreen> {
             ),
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.all(20),
+        Padding(
+          padding: const EdgeInsets.all(20),
           child: Row(
             children: [
               CircleAvatar(
                 radius: 50,
                 backgroundColor: Colors.teal,
+                backgroundImage: NetworkImage(
+                  widget.tripDetails['driverDetails']['driverImage'],
+                ),
               ),
               Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(left: 30),
+                  padding: const EdgeInsets.only(left: 30),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Name"),
-                      Padding(
+                      Text(
+                        "${widget.tripDetails['driverDetails']['driverName']}",
+                      ),
+                      const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8),
                         child: Text("Joined month,year"),
                       ),
-                      Text("Gender, xx years old"),
+                      const Text("Gender, xx years old"),
                     ],
                   ),
                 ),
@@ -441,17 +450,26 @@ class _RequestToBookScreenState extends State<RequestToBookScreen> {
                 decoration: BoxDecoration(
                   color: Colors.grey,
                   borderRadius: BorderRadius.circular(16),
+                  image: DecorationImage(
+                    image: NetworkImage(
+                      widget.tripDetails['vehicle']['vehicleImage'],
+                    ),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
-              const Expanded(
+              Expanded(
                 child: Padding(
-                  padding: EdgeInsets.only(left: 20),
+                  padding: const EdgeInsets.only(left: 20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Audi"),
-                      SizedBox(height: 10),
-                      Text("White, 2022"),
+                      Text(
+                        "${widget.tripDetails['vehicle']['model']}",
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                          "${widget.tripDetails['vehicle']['color']}, ${widget.tripDetails['vehicle']['year']}"),
                     ],
                   ),
                 ),
@@ -466,6 +484,14 @@ class _RequestToBookScreenState extends State<RequestToBookScreen> {
   int seatsNeeded = 1;
 
   Widget seatsAndPricing() {
+    double pricePerSeat = double.parse(
+      widget.tripDetails['price'],
+    );
+
+    double bookingFee = 100.00;
+
+    double totalAmount = (pricePerSeat * seatsNeeded) + bookingFee;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -543,42 +569,42 @@ class _RequestToBookScreenState extends State<RequestToBookScreen> {
           padding: EdgeInsets.symmetric(horizontal: 30),
           child: Divider(),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(
+        Padding(
+          padding: const EdgeInsets.symmetric(
             horizontal: 30,
             vertical: 10,
           ),
           child: Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text("1 seat"),
               ),
-              Text("Rs. 2,400.00"),
+              Text("Rs. $pricePerSeat"),
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 30),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30),
           child: Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text("Booking fee"),
               ),
-              Text("Rs. 100.00"),
+              Text("Rs. $bookingFee"),
             ],
           ),
         ),
-        const Padding(
-          padding: EdgeInsets.symmetric(
+        Padding(
+          padding: const EdgeInsets.symmetric(
             horizontal: 30,
             vertical: 20,
           ),
           child: Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text("Total"),
               ),
-              Text("Rs. 2,500.00"),
+              Text("Rs. $totalAmount"),
             ],
           ),
         ),

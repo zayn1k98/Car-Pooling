@@ -400,7 +400,9 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                   onPressed: () {
                     Navigator.pushReplacement(context,
                         MaterialPageRoute(builder: (context) {
-                      return const RequestToBookScreen();
+                      return RequestToBookScreen(
+                        tripDetails: widget.tripDetails,
+                      );
                     }));
                   },
                   style: ElevatedButton.styleFrom(

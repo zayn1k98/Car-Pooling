@@ -38,13 +38,16 @@ class _TripsScreenState extends State<TripsScreen> {
     allTrips = await TripsService().getTrips();
 
     for (var ele in allTrips) {
-      if (ele['userId'] != userId) {
+      if (ele['status'] == 'active' && ele['userId'] != userId) {
         setState(() {
           activeTrips.add(ele);
         });
       }
-      print("status : ${ele['status']} on ${ele['departureDate']}");
+      print(
+        "status : ${ele['status']} on ${ele['departureDate']} with user id : ${ele['userId']}",
+      );
     }
+    print("ALL TRIPS : $allTrips");
   }
 
   @override

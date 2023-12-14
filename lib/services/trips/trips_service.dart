@@ -72,10 +72,7 @@ class TripsService {
   }
 
   Future<List> getTrips() async {
-    QuerySnapshot tripQuery = await firestore
-        .collection('trips')
-        .where('status', isEqualTo: 'active')
-        .get();
+    QuerySnapshot tripQuery = await firestore.collection('trips').get();
 
     List trips = tripQuery.docs;
 

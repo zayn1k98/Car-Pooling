@@ -1,7 +1,6 @@
 import 'dart:developer';
 import 'package:car_pooling/models/trip_model.dart';
 import 'package:car_pooling/models/vehicle_model.dart';
-import 'package:car_pooling/screens/home/post_options/post_ride/location_picker_screen.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -190,6 +189,7 @@ class _PostRideScreenState extends State<PostRideScreen> {
             textField(
               originController,
               "Enter an origin",
+              onTapped: () {},
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
@@ -204,6 +204,7 @@ class _PostRideScreenState extends State<PostRideScreen> {
             textField(
               destinationController,
               "Enter a destination",
+              onTapped: () {},
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
@@ -227,6 +228,7 @@ class _PostRideScreenState extends State<PostRideScreen> {
                   additionalStopsController,
                   "Add a stop to get more bookings",
                   isAdditionalStop: true,
+                  onTapped: () {},
                 ),
               ),
             ),
@@ -933,21 +935,17 @@ class _PostRideScreenState extends State<PostRideScreen> {
     TextEditingController controller,
     String hint, {
     bool? isAdditionalStop = false,
+    Function()? onTapped,
   }) {
     return Padding(
       padding:
           EdgeInsets.symmetric(horizontal: isAdditionalStop == true ? 0 : 30),
       child: GestureDetector(
-        onTap: () {
-          print("OPEN LOCATION PICKER");
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            return const LocationPickerScreen();
-          }));
-        },
+        onTap: onTapped,
         child: TextFormField(
           controller: controller,
           decoration: InputDecoration(
-            enabled: false,
+            enabled: onTapped != null ? true : false,
             filled: true,
             fillColor: isAdditionalStop == true
                 ? Colors.white

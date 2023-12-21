@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 
@@ -26,23 +28,42 @@ class _LocationPickerScreenState extends State<LocationPickerScreen> {
         searchbarInputBorder: const OutlineInputBorder(
           borderSide: BorderSide.none,
         ),
-        selectedLocationButtonTextstyle: const TextStyle(fontSize: 18),
+        searchbarInputFocusBorderp: const OutlineInputBorder(
+          borderSide: BorderSide.none,
+        ),
+        selectedLocationButtonTextstyle: const TextStyle(
+          fontSize: 18,
+          color: Colors.white,
+          fontWeight: FontWeight.w500,
+        ),
         mapLanguage: 'en',
-        onError: (e) => print(e),
-        selectLocationButtonLeadingIcon: const Icon(Icons.check),
+        onError: (e) => log(e as String),
+        selectLocationButtonText: "Select Location",
+        showZoomController: false,
+        locationButtonBackgroundColor: const Color(0xFFFF4E00),
+        locationButtonsColor: Colors.white,
+        selectLocationButtonStyle: ButtonStyle(
+          backgroundColor: MaterialStateProperty.all(
+            const Color(0xFFFF4E00),
+          ),
+        ),
+        markerIcon: Image.asset(
+          'assets/icons/pin.png',
+          height: 46,
+        ),
         onPicked: (pickedData) {
-          print(pickedData.latLong.latitude);
-          print(pickedData.latLong.longitude);
-          print(pickedData.address);
-          print(pickedData.addressData);
+          log(pickedData.latLong.latitude as String);
+          log(pickedData.latLong.longitude as String);
+          log(pickedData.address);
+          log(pickedData.addressData as String);
           widget.onExit(pickedData);
           Navigator.pop(context);
         },
         onChanged: (pickedData) {
-          print(pickedData.latLong.latitude);
-          print(pickedData.latLong.longitude);
-          print(pickedData.address);
-          print(pickedData.addressData);
+          log(pickedData.latLong.latitude as String);
+          log(pickedData.latLong.longitude as String);
+          log(pickedData.address);
+          log(pickedData.addressData as String);
         },
         showContributorBadgeForOSM: true,
       ),

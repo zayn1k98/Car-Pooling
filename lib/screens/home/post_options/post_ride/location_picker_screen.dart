@@ -1,38 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:location_picker_flutter_map/location_picker_flutter_map.dart';
 
 class LocationPickerScreen extends StatefulWidget {
-  const LocationPickerScreen({super.key});
+  final Function(PickedData) onExit;
+  const LocationPickerScreen({
+    required this.onExit,
+    super.key,
+  });
 
   @override
   State<LocationPickerScreen> createState() => _LocationPickerScreenState();
 }
 
 class _LocationPickerScreenState extends State<LocationPickerScreen> {
-  LatLng location = const LatLng(12.963400, 77.586790);
-
-  CameraPosition cameraPosition = const CameraPosition(
-    target: LatLng(12.963400, 77.586790),
-    zoom: 12,
-  );
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: GoogleMap(
-        mapType: MapType.normal,
-        initialCameraPosition: cameraPosition,
-        markers: {
-          Marker(
-            markerId: const MarkerId('Location'),
-            position: location,
-          ),
+      body: FlutterLocationPicker(
+        initZoom: 11,
+        minZoomLevel: 5,
+        maxZoomLevel: 16,
+        trackMyPosition: true,
+        searchBarBackgroundColor: Colors.white,
+        searchbarBorderRadius: BorderRadius.circular(60),
+        searchbarInputBorder: const OutlineInputBorder(
+          borderSide: BorderSide.none,
+        ),
+        selectedLocationButtonTextstyle: const TextStyle(fontSize: 18),
+        mapLanguage: 'en',
+        onError: (e) => print(e),
+        selectLocationButtonLeadingIcon: const Icon(Icons.check),
+        onPicked: (pickedData) {
+          print(pickedData.latLong.latitude);
+          print(pickedData.latLong.longitude);
+          print(pickedData.address);
+          print(pickedData.addressData);
+          widget.onExit(pickedData);
+          Navigator.pop(context);
         },
-        zoomControlsEnabled: true,
-        scrollGesturesEnabled: true,
-        onCameraMove: (cameraPosition) {
-          print("CAMERA MOVED");
-          this.cameraPosition = cameraPosition;
+        onChanged: (pickedData) {
+          print(pickedData.latLong.latitude);
+          print(pickedData.latLong.longitude);
+          print(pickedData.address);
+          print(pickedData.addressData);
         },
+        showContributorBadgeForOSM: true,
       ),
     );
   }

@@ -7,4 +7,7 @@ class Constants {
 
   static const String googleMapAPIKey =
       "AIzaSyCWqvZppc29hkC5vtA4BpEkdeDhkqwltsk";
+
+  static const String altGoogleMapAPIKey =
+      " AIzaSyCL0Ulkw_BaNHnI5gaq5GC620-Uy2ByQg0";
 }

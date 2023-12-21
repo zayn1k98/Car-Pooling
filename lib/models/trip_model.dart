@@ -2,8 +2,8 @@ import 'package:car_pooling/models/vehicle_model.dart';
 
 class TripModel {
   String? userId;
-  String? origin;
-  String? destination;
+  TripLocation? origin;
+  TripLocation? destination;
   String? stops;
   String? departureDate;
   String? departureTime;
@@ -34,8 +34,8 @@ class TripModel {
   toJson() {
     return {
       "userId": userId,
-      "origin": origin,
-      "destination": destination,
+      "origin": origin!.toJson(),
+      "destination": destination!.toJson(),
       "stops": stops,
       "departureDate": departureDate,
       "departureTime": departureTime,
@@ -46,6 +46,29 @@ class TripModel {
       "tripType": tripType,
       "tripDescription": tripDescription,
       "status": status,
+    };
+  }
+}
+
+class TripLocation {
+  double? latitude;
+  double? longitude;
+  String? address;
+  Map<String, dynamic>? addressData;
+
+  TripLocation({
+    this.latitude,
+    this.longitude,
+    this.address,
+    this.addressData,
+  });
+
+  toJson() {
+    return {
+      'latitude': latitude,
+      'longitude': longitude,
+      'address': address,
+      'addressData': addressData,
     };
   }
 }

@@ -27,12 +27,10 @@ class UserServices with ChangeNotifier {
 
     documentReference.snapshots().listen((event) async {
       isUserOnline = await event.get('isOnline');
-      // this prints perfectly fine ...
       isUserOnline ? print("user is online") : print("user is offline");
     });
 
     return isUserOnline;
-    // but here the value is always returned as false ...
   }
 
   Future<Map<String, dynamic>> getUserData({required String userId}) async {

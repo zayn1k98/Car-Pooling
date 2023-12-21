@@ -202,10 +202,10 @@ class _TripsScreenState extends State<TripsScreen> {
           }));
         },
         child: Container(
-          height:
-              tripDetails['stops'].isNotEmpty || tripDetails['stops'] != null
-                  ? 240
-                  : 200,
+          // height:
+          //     tripDetails['stops'].isNotEmpty || tripDetails['stops'] != null
+          //         ? 240
+          //         : 200,
           decoration: BoxDecoration(
             border: Border.all(
               color: const Color(0xFFE9E9E9),
@@ -248,8 +248,8 @@ class _TripsScreenState extends State<TripsScreen> {
                   Container(
                     height: tripDetails['stops'].isNotEmpty ||
                             tripDetails['stops'] != null
-                        ? 75
-                        : 50,
+                        ? 120
+                        : 60,
                     width: 4,
                     decoration: BoxDecoration(
                       color: Colors.blue,
@@ -263,22 +263,26 @@ class _TripsScreenState extends State<TripsScreen> {
                         children: [
                           Row(
                             children: [
-                              Text(
-                                "${tripDetails['origin']}",
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Text(
+                                  "${tripDetails['origin']['addressData']['road']}",
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 16),
-                                child: Text(
-                                  "98, George St, Ottowa, Canada",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 16),
+                                  child: Text(
+                                    "${tripDetails['origin']['addressData']['county']}, ${tripDetails['origin']['addressData']['city']}",
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -339,22 +343,26 @@ class _TripsScreenState extends State<TripsScreen> {
                               : const SizedBox(),
                           Row(
                             children: [
-                              Text(
-                                "${tripDetails['destination']}",
-                                style: const TextStyle(
-                                  color: Colors.blue,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Text(
+                                  "${tripDetails['destination']['addressData']['road']}",
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
-                              const Padding(
-                                padding: EdgeInsets.only(left: 16),
-                                child: Text(
-                                  "Pearson Airport Terminal 1",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 16),
+                                  child: Text(
+                                    "${tripDetails['destination']['addressData']['county']}, ${tripDetails['destination']['addressData']['city']}",
+                                    style: const TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -369,7 +377,7 @@ class _TripsScreenState extends State<TripsScreen> {
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text(
-                  "${tripDetails['vehicle']['model']}",
+                  "${tripDetails['vehicle']['model']}, ${tripDetails['vehicle']['year']}",
                   style: TextStyle(
                     color: Colors.grey[600],
                     fontSize: 16,
@@ -386,56 +394,59 @@ class _TripsScreenState extends State<TripsScreen> {
                   color: Color(0xFFE4E4E4),
                 ),
               ),
-              SizedBox(
-                height: 40,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    CircleAvatar(
-                      backgroundImage: NetworkImage(
-                        tripDetails['driverDetails']['driverImage'],
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: SizedBox(
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(
+                          tripDetails['driverDetails']['driverImage'],
+                        ),
                       ),
-                    ),
-                    Text(
-                      tripDetails['driverDetails']['driverName'],
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      Text(
+                        tripDetails['driverDetails']['driverName'],
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    tripDetails['driverDetails']['isVerified']
-                        ? Image.asset(
-                            'assets/icons/verified.png',
-                            height: 26,
-                            width: 26,
-                          )
-                        : const SizedBox(),
-                    const VerticalDivider(
-                      width: 1,
-                    ),
-                    const Icon(
-                      Icons.star,
-                      color: Colors.amber,
-                      size: 22,
-                    ),
-                    Text(
-                      tripDetails['driverDetails']['rating'],
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                      tripDetails['driverDetails']['isVerified']
+                          ? Image.asset(
+                              'assets/icons/verified.png',
+                              height: 26,
+                              width: 26,
+                            )
+                          : const SizedBox(),
+                      const VerticalDivider(
+                        width: 1,
                       ),
-                    ),
-                    const VerticalDivider(
-                      width: 1,
-                    ),
-                    const Text(
-                      "45 Rides",
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
+                      const Icon(
+                        Icons.star,
+                        color: Colors.amber,
+                        size: 22,
                       ),
-                    ),
-                  ],
+                      Text(
+                        tripDetails['driverDetails']['rating'],
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const VerticalDivider(
+                        width: 1,
+                      ),
+                      const Text(
+                        "45 Rides",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

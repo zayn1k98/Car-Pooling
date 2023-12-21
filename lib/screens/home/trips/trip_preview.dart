@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:car_pooling/screens/chat_screen/chat_screen.dart';
 import 'package:car_pooling/screens/home/trips/request_to_book.dart';
 import 'package:car_pooling/widgets/map_widget.dart';
@@ -22,17 +24,25 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
   void initState() {
     super.initState();
 
+    log("TRIP DETAILS : ${widget.tripDetails}");
+
+    myLatitude = widget.tripDetails['origin']['latitude'];
+    myLongitude = widget.tripDetails['origin']['longitude'];
+
+    destLatitude = widget.tripDetails['destination']['latitude'];
+    destLongitude = widget.tripDetails['destination']['longitude'];
+
     DateTime tripDateTime = DateFormat('d MMMM yyyy').parse(
       widget.tripDetails['departureDate'],
     );
     tripDate = DateFormat('EEE, MMM d').format(tripDateTime);
   }
 
-  double myLatitude = 12.963400;
-  double myLongitude = 77.586790;
+  double myLatitude = 0;
+  double myLongitude = 0;
 
-  double destLatitude = 12.963400;
-  double destLongitude = 77.583278;
+  double destLatitude = 0;
+  double destLongitude = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -78,33 +88,44 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            widget.tripDetails['origin'],
-                            style: const TextStyle(
-                              color: Colors.blue,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.tripDetails['origin']['addressData']
+                                      ['road'],
+                                  style: const TextStyle(
+                                    color: Colors.blue,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Text(
+                                  "${widget.tripDetails['origin']['addressData']['county']}, ${widget.tripDetails['origin']['addressData']['city']}",
+                                  style: const TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            "$tripDate at ${widget.tripDetails['departureTime']}",
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          SizedBox(
+                            width: 100,
+                            child: Text(
+                              "$tripDate at ${widget.tripDetails['departureTime']}",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ],
                       ),
-                      const Text(
-                        "origin",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      const SizedBox(height: 10),
                       widget.tripDetails['stops'].isNotEmpty ||
                               widget.tripDetails != null
                           ? Column(
@@ -119,14 +140,15 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const Text(
-                                  "stops address",
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
+                                const SizedBox(height: 10),
+                                // const Text(
+                                //   "stops address",
+                                //   style: TextStyle(
+                                //     color: Colors.grey,
+                                //     fontSize: 14,
+                                //     fontWeight: FontWeight.bold,
+                                //   ),
+                                // ),
                               ],
                             )
                           : const SizedBox(),
@@ -135,7 +157,8 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            widget.tripDetails['destination'],
+                            widget.tripDetails['destination']['addressData']
+                                ['road'],
                             style: const TextStyle(
                               color: Colors.blue,
                               fontSize: 16,
@@ -151,9 +174,9 @@ class _TripsPreviewScreenState extends State<TripsPreviewScreen> {
                           ),
                         ],
                       ),
-                      const Text(
-                        "destination",
-                        style: TextStyle(
+                      Text(
+                        "${widget.tripDetails['destination']['addressData']['county']}, ${widget.tripDetails['destination']['addressData']['city']}",
+                        style: const TextStyle(
                           color: Colors.grey,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

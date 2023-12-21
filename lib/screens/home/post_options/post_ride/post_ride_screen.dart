@@ -1,7 +1,9 @@
 import 'dart:developer';
 import 'package:car_pooling/models/trip_model.dart';
 import 'package:car_pooling/models/vehicle_model.dart';
+import 'package:car_pooling/screens/home/post_options/post_ride/location_picker_screen.dart';
 import 'package:car_pooling/services/trips/trips_service.dart';
+import 'package:car_pooling/widgets/custom_text_field.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -50,6 +52,9 @@ class _PostRideScreenState extends State<PostRideScreen> {
 
   Vehicle? chosenVehicle;
 
+  TripLocation originLocation = TripLocation();
+  TripLocation destinationLocation = TripLocation();
+
   void postTrip() async {
     if (formKey.currentState!.validate()) {
       //* post trip
@@ -74,8 +79,8 @@ class _PostRideScreenState extends State<PostRideScreen> {
 
           TripModel trip = TripModel(
             userId: userId,
-            origin: originController.text,
-            destination: destinationController.text,
+            origin: originLocation,
+            destination: destinationLocation,
             stops: additionalStopsController.text,
             departureDate: dateController.text,
             departureTime: timeController.text,
@@ -186,10 +191,41 @@ class _PostRideScreenState extends State<PostRideScreen> {
                 ),
               ),
             ),
-            textField(
-              originController,
-              "Enter an origin",
-              onTapped: () {},
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 30,
+              ),
+              child: CustomTextField(
+                controller: originController,
+                hint: "Enter an origin",
+                icon: const Icon(
+                  Icons.location_on,
+                  color: Colors.black,
+                ),
+                onTapped: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return LocationPickerScreen(
+                      onExit: (location) {
+                        log("LOCATION PICKED");
+                        setState(() {
+                          originController.text = location.address;
+
+                          originLocation = TripLocation(
+                            latitude: location.latLong.latitude,
+                            longitude: location.latLong.longitude,
+                            address: location.address,
+                            addressData: location.addressData,
+                          );
+
+                          log(
+                            "ORIGIN LOCATION : ${originLocation.toJson()}",
+                          );
+                        });
+                      },
+                    );
+                  }));
+                },
+              ),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),
@@ -201,10 +237,41 @@ class _PostRideScreenState extends State<PostRideScreen> {
                 ),
               ),
             ),
-            textField(
-              destinationController,
-              "Enter a destination",
-              onTapped: () {},
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 30,
+              ),
+              child: CustomTextField(
+                controller: destinationController,
+                hint: "Enter the destination",
+                icon: const Icon(
+                  Icons.location_on,
+                  color: Colors.black,
+                ),
+                onTapped: () {
+                  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                    return LocationPickerScreen(
+                      onExit: (location) {
+                        log("LOCATION PICKED");
+                        setState(() {
+                          destinationController.text = location.address;
+
+                          destinationLocation = TripLocation(
+                            latitude: location.latLong.latitude,
+                            longitude: location.latLong.longitude,
+                            address: location.address,
+                            addressData: location.addressData,
+                          );
+
+                          log(
+                            "DESTINATION LOCATION : ${destinationLocation.toJson()}",
+                          );
+                        });
+                      },
+                    );
+                  }));
+                },
+              ),
             ),
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 16),

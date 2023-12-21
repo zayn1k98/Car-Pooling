@@ -1,4 +1,7 @@
+import 'dart:developer';
+
 import 'package:car_pooling/screens/find_trip/search_results.dart';
+import 'package:car_pooling/screens/home/post_options/post_ride/location_picker_screen.dart';
 import 'package:car_pooling/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -48,6 +51,18 @@ class _FindTripScreenState extends State<FindTripScreen> {
                 Icons.location_on,
                 color: Colors.black,
               ),
+              onTapped: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return LocationPickerScreen(
+                    onExit: (location) {
+                      log("LOCATION PICKED");
+                      setState(() {
+                        originController.text = location.address;
+                      });
+                    },
+                  );
+                }));
+              },
             ),
             const Padding(
               padding: EdgeInsets.all(8),
@@ -71,6 +86,18 @@ class _FindTripScreenState extends State<FindTripScreen> {
                 Icons.location_on,
                 color: Colors.black,
               ),
+              onTapped: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context) {
+                  return LocationPickerScreen(
+                    onExit: (location) {
+                      log("LOCATION PICKED");
+                      setState(() {
+                        destinationController.text = location.address;
+                      });
+                    },
+                  );
+                }));
+              },
             ),
             Padding(
               padding: const EdgeInsets.only(top: 38),
